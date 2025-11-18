@@ -15,6 +15,7 @@ export default function NavBar() {
         w-[90%] h-12 px-6 flex items-center justify-between
         rounded-lg bg-orange-700/30
         border border-white/20 shadow-lg shadow-black/10
+        backdrop-blur-xl
       ">
         <Link href="/" className="cursor-pointer">
           <h1 className="text-xl text-white">Terracotta</h1>
