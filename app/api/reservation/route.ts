@@ -163,11 +163,35 @@ const reservationEmailTemplate = (formData: {
 };
 
 // Email configuration - these should be set as environment variables
-const OWNER_EMAIL = process.env.OWNER_EMAIL || 'owner@terracotta.com';
+const OWNER_EMAIL = process.env.OWNER_EMAIL || 'info@terracotta-acton.com';
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
+const IS_SMTP_CONFIGURED = Boolean(SMTP_USER && SMTP_PASS);
+
+const createTransporter = () => {
+    if (!IS_SMTP_CONFIGURED) {
+        console.warn(
+            '[reservation] SMTP credentials missing. Falling back to Nodemailer JSON transport for local testing. ' +
+            'Set SMTP_USER/SMTP_PASS to enable real emails.'
+        );
+
+        return nodemailer.createTransport({
+            jsonTransport: true,
+        });
+    }
+
+    return nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465, // true for 465, false for other ports
+        auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+        },
+    });
+};
 
 export async function POST(request: NextRequest) {
     try {
@@ -182,15 +206,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create transporter for sending emails
-        const transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
-            port: SMTP_PORT,
-            secure: SMTP_PORT === 465, // true for 465, false for other ports
-            auth: {
-                user: SMTP_USER,
-                pass: SMTP_PASS,
-            },
-        });
+        const transporter = createTransporter();
 
         // Generate confirmation token (base64 encoded reservation data)
         const confirmationToken = Buffer.from(JSON.stringify(formData)).toString('base64');
@@ -198,7 +214,7 @@ export async function POST(request: NextRequest) {
         // Get base URL for confirmation link
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
                        request.headers.get('origin') || 
-                       'http://localhost:3000';
+                       'terracotta-acton.com';
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
         
         // Generate HTML email using the template
@@ -206,7 +222,9 @@ export async function POST(request: NextRequest) {
 
         // Send email to restaurant owner
         const mailOptions = {
-            from: `"Terracotta Reservations" <${SMTP_USER}>`,
+            from: SMTP_USER
+                ? `"Terracotta Reservations" <${SMTP_USER}>`
+                : '"Terracotta Reservations" <no-reply@terracotta.local>',
             to: OWNER_EMAIL,
             subject: `New Table Reservation - ${formData.name} - ${formData.date} at ${formData.time}`,
             html: htmlEmail,
@@ -227,7 +245,11 @@ Please confirm this reservation with the guest as soon as possible.
             `.trim(),
         };
 
-        await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(mailOptions);
+
+        if (!IS_SMTP_CONFIGURED) {
+            console.info('[reservation] Email captured (not sent). Preview JSON payload:\n', info.messageId);
+        }
 
         return NextResponse.json(
             { message: 'Reservation submitted successfully' },
@@ -249,4 +271,5 @@ export async function GET(request: NextRequest) {
         { status: 200 }
     );
 }
+
 

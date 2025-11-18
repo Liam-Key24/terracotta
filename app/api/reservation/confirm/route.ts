@@ -17,124 +17,71 @@ const customerConfirmationEmailTemplate = (formData: {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Confirmed</title>
+    <title>Booking Confirmed</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .email-container {
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .header {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px 8px 0 0;
-            margin: -30px -30px 30px -30px;
-            text-align: center;
-        }
-        .header h1 {
+            background-color: #f6f6f6;
+            color: #111;
             margin: 0;
-            font-size: 24px;
+            padding: 24px;
         }
-        .confirmation-badge {
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f0fdf4;
-            border: 2px solid #16a34a;
-            border-radius: 8px;
-            color: #166534;
-            font-weight: bold;
-            font-size: 18px;
+        .card {
+            max-width: 520px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 35px rgba(16, 24, 40, 0.1);
         }
-        .info-section {
-            margin-bottom: 25px;
-        }
-        .info-row {
-            display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e5e5;
-        }
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        .info-label {
-            font-weight: bold;
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
             color: #16a34a;
-            width: 140px;
-            flex-shrink: 0;
+            background: #ecfdf3;
+            margin-bottom: 20px;
         }
-        .info-value {
-            color: #333;
-            flex: 1;
+        h1 {
+            font-size: 24px;
+            margin: 0 0 12px;
+            color: #0f172a;
         }
-        .special-requests {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #16a34a;
-            margin-top: 10px;
+        p {
+            margin: 0 0 10px;
         }
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #e5e5e5;
-            text-align: center;
-            color: #666;
-            font-size: 12px;
+        .details {
+            margin-top: 24px;
+            padding: 16px 20px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .details strong {
+            color: #0f172a;
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>✓ Reservation Confirmed!</h1>
+    <div class="card">
+        <div class="badge">✓ Booking confirmed</div>
+        <h1>Hi ${formData.name},</h1>
+        <p>Your table at Terracotta is confirmed. We’re excited to host you!</p>
+
+        <div class="details">
+            <p><strong>Date:</strong> ${formData.date}</p>
+            <p><strong>Time:</strong> ${formData.time}</p>
+            <p><strong>Guests:</strong> ${formData.guests}</p>
+            ${formData.specialRequests ? `<p><strong>Notes:</strong> ${formData.specialRequests.replace(/\n/g, '<br>')}</p>` : ''}
         </div>
-        
-        <div class="confirmation-badge">
-            🎉 Your table reservation has been confirmed!
-        </div>
-        
-        <p>Dear ${formData.name},</p>
-        <p>We're excited to confirm your reservation at Terracotta. Here are your reservation details:</p>
-        
-        <div class="info-section">
-            <div class="info-row">
-                <div class="info-label">Date:</div>
-                <div class="info-value">${formData.date}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Time:</div>
-                <div class="info-value">${formData.time}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Number of Guests:</div>
-                <div class="info-value">${formData.guests}</div>
-            </div>
-            ${formData.specialRequests ? `
-            <div class="special-requests">
-                <strong>Special Requests:</strong><br>
-                ${formData.specialRequests.replace(/\n/g, '<br>')}
-            </div>
-            ` : ''}
-        </div>
-        
-        <p>We look forward to serving you! If you need to make any changes or have questions, please don't hesitate to contact us.</p>
-        
-        <div class="footer">
-            <p><strong>Terracotta Restaurant</strong></p>
-            <p>Thank you for choosing us!</p>
-        </div>
+
+        <p style="margin-top:24px;">If you need to adjust anything, just reply to this email. See you soon!</p>
+        <p style="margin-top:16px; color:#64748b;">— Terracotta Team</p>
     </div>
 </body>
 </html>
@@ -146,6 +93,30 @@ const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
+const IS_SMTP_CONFIGURED = Boolean(SMTP_USER && SMTP_PASS);
+
+const createTransporter = () => {
+    if (!IS_SMTP_CONFIGURED) {
+        console.warn(
+            '[reservation-confirm] SMTP credentials missing. Using Nodemailer JSON transport. ' +
+            'Set SMTP_USER/SMTP_PASS to send real emails.'
+        );
+
+        return nodemailer.createTransport({
+            jsonTransport: true,
+        });
+    }
+
+    return nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465,
+        auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+        },
+    });
+};
 
 export async function GET(request: NextRequest) {
     try {
@@ -225,44 +196,36 @@ export async function GET(request: NextRequest) {
         }
 
         // Create transporter for sending emails
-        const transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
-            port: SMTP_PORT,
-            secure: SMTP_PORT === 465,
-            auth: {
-                user: SMTP_USER,
-                pass: SMTP_PASS,
-            },
-        });
+        const transporter = createTransporter();
 
         // Generate HTML confirmation email for customer
         const htmlEmail = customerConfirmationEmailTemplate(formData);
 
         // Send confirmation email to customer
         const mailOptions = {
-            from: `"Terracotta Restaurant" <${SMTP_USER}>`,
+            from: SMTP_USER
+                ? `"Terracotta Restaurant" <${SMTP_USER}>`
+                : '"Terracotta Restaurant" <no-reply@terracotta.local>',
             to: formData.email,
             subject: `Reservation Confirmed - ${formData.date} at ${formData.time}`,
             html: htmlEmail,
             text: `
-Reservation Confirmed!
+Booking confirmed!
 
-Dear ${formData.name},
+Hi ${formData.name},
 
-We're excited to confirm your reservation at Terracotta.
+Your table at Terracotta is confirmed for ${formData.date} at ${formData.time} (${formData.guests} guests).
+${formData.specialRequests ? `Notes: ${formData.specialRequests}` : ''}
 
-Date: ${formData.date}
-Time: ${formData.time}
-Number of Guests: ${formData.guests}
-${formData.specialRequests ? `Special Requests: ${formData.specialRequests}` : ''}
-
-We look forward to serving you!
-
-Terracotta Restaurant
+Reply to this email if you need anything. See you soon!
             `.trim(),
         };
 
-        await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(mailOptions);
+
+        if (!IS_SMTP_CONFIGURED) {
+            console.info('[reservation-confirm] Customer email captured (not sent). Preview JSON payload:\n', info.messageId);
+        }
 
         // Return success page
         return new NextResponse(`

@@ -2,9 +2,19 @@ import type { Metadata } from "next";
 
 import NavBar from './layout/navbar'
 import Footer from "./layout/footer";
+import { Oranienbaum, Roboto_Condensed } from "next/font/google";
 import "./globals.css";
 
+export const oranienbaum = Oranienbaum({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-oranienbaum",
+});
 
+export const robotoCondensed = Roboto_Condensed({
+  subsets: ["latin"],
+  variable: "--font-roboto-condensed",
+});
 
 export default function RootLayout({
   children,
@@ -12,9 +22,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="m-2">
       <body
-        className="mx-2 mt-2"
+        className={`${oranienbaum.variable} ${robotoCondensed.variable}`}
       >
         <NavBar/>
         {children}
