@@ -13,7 +13,7 @@ export default function NavBar() {
       <nav className="
         fixed top-4 left-1/2 -translate-x-1/2 z-60
         w-[90%] h-12 px-6 flex items-center justify-between
-        rounded-lg glass
+        rounded-lg glass bg-orange-700/70
         md:w-[96%]
         md:h-18
       ">
@@ -33,7 +33,7 @@ export default function NavBar() {
 
                 
           <Link href={'/about'}>About</Link>
-          <Link href={'/'}>Menu</Link>
+          <Link href={'/menu'}>Menu</Link>
           <Link  href={'/contact'} className='w-fit h-fit glass p-1 px-2 rounded-lg flex space-x-2 items-center'><span>Contact</span><ArrowUpRightIcon/></Link>
         </div>
       
