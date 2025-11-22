@@ -64,7 +64,7 @@ export default function NavBar() {
           `}
         >
           <Link href="/about" className="text-xl cursor-pointer">About</Link>
-          <Link href="/" className="text-xl cursor-pointer">Menu</Link>
+          <Link href="/menu" className="text-xl cursor-pointer">Menu</Link>
           <Link href="/contact" className="text-xl cursor-pointer">Contact</Link>
         </div>
       </div>
