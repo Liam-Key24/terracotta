@@ -9,6 +9,10 @@
   @apply bg-orange-700/30 border border-white/20 shadow-lg shadow-black/10 backdrop-blur-xl;
 }
 
+@utility font-roboto-condensed {
+  font-family: var(--font-roboto-condensed), sans-serif;
+}
+
 
 @theme inline {
   --color-background: var(--background);

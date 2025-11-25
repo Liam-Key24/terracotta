@@ -97,14 +97,12 @@ export default function MenuSection({
               : 'space-y-1'
           }
         >
+          <div className="flex flex-row items-center justify-center gap-3 lg:gap-5">
           <h3 className="text-lg sm:text-xl md:text-2xl text-orange-700">{item.name}</h3>
+          <span className="text-orange-700 text-xs sm:text-sm md:text-base italic font-roboto-condensed">{item.price && `${item.price}`}</span>
+          </div>
           {itemLayout === 'description' && item.description && (
             <p className="text-xs sm:text-sm md:text-lg italic">{item.description}</p>
-          )}
-          {itemLayout === 'price' && item.price && (
-            <p className="text-xs sm:text-sm md:text-lg italic text-orange-700/70">
-              {item.price}
-            </p>
           )}
         </article>
       ))}

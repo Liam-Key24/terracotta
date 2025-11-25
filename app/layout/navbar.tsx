@@ -36,10 +36,7 @@ export default function NavBar() {
           <Link href={'/menu'}>Menu</Link>
           <Link  href={'/contact'} className='w-fit h-fit glass p-1 px-2 rounded-lg flex space-x-2 items-center'><span>Contact</span><ArrowUpRightIcon/></Link>
         </div>
-      
-      
-      
-      
+  
       
       </nav>
 
