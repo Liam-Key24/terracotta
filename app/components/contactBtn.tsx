@@ -7,7 +7,7 @@ export default function ContactBtn() {
     return (
         <div>
             <Link
-                href="/#form"
+                href="/contact"
                 className="
             group w-fit h-fit flex items-center justify-center 
             px-4 py-2 md:px-6 md:py-3 

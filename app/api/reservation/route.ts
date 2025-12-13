@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
         // Get base URL for confirmation link
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
                        request.headers.get('origin') || 
-                       'terracotta-acton.com';
+                       'https://terracotta-acton.com';
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
         
         // Generate HTML email using the template
