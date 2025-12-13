@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import NavBar from './layout/navbar'
 import Footer from "./layout/footer";
+import { Analytics } from "@vercel/analytics/next";
 import { Oranienbaum, Roboto_Condensed } from "next/font/google";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
         <NavBar/>
         {children}
         <Footer/>
+        <Analytics />
       </body>
 
     </html>
