@@ -6,8 +6,8 @@ import { foodData } from '../data/foodData'
 import { drinksData } from '../data/drinksData'
 
 import MenuSectionWrapper from './component/MenuSectionWrapper'
-import BookTableBtnPage from '../components/bookTablebtn-page'
 import Contact from '../components/contactBtn'
+import BookTableBtn from '../components/bookTablebtn'
 
 export default function Menu() {
   const [activeTab, setActiveTab] = useState<'menu' | 'wine' | 'drink'>('menu')
@@ -36,7 +36,7 @@ export default function Menu() {
             id={`${tab.id}-tab`}
             onClick={() => setActiveTab(tab.id as 'menu' | 'wine' | 'drink')}
             className={`text-3xl md:text-5xl text-center cursor-pointer transition ${
-              activeTab === tab.id ? 'text-orange-700' : ''
+              activeTab === tab.id ? 'text-[#631732]' : ''
             }`}
           >
             <h1>{tab.label}</h1>
@@ -73,7 +73,7 @@ export default function Menu() {
       </div>
 
       <div className="flex justify-center space-x-2 my-5" aria-label="Action buttons">
-        <BookTableBtnPage />
+        <BookTableBtn />
         <Contact />
       </div>
 

@@ -13,7 +13,7 @@ export default function HeroBtn() {
 
       <Link
         href="/menu"
-        className="group w-fit h-fit flex space-x-2 p-2 md:p-3 items-center justify-center glass rounded-full 
+        className="group w-56 h-15 flex space-x-2 p-2 md:p-3 items-center justify-center glass rounded-2xl 
                    hover:-translate-y-1 hover:translate-x-2 
                    transition-transform duration-300 ease-in-out"
       >

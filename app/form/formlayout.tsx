@@ -60,7 +60,7 @@ export default function Form(){
 
     return (
         <div className="w-full max-w-2xl mx-auto p-6 md:p-8" id='form'>
-            <h2 className="text-3xl font-light text-center mb-8 text-orange-700/70">Make a Reservation</h2>
+            <h2 className="text-3xl font-light text-center mb-8 text-[#631732]/70">Make a Reservation</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -75,7 +75,7 @@ export default function Form(){
                             required
                             value={formData.name}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="John Doe"
                         />
                     </div>
@@ -91,7 +91,7 @@ export default function Form(){
                             required
                             value={formData.email}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="john@example.com"
                         />
                     </div>
@@ -107,7 +107,7 @@ export default function Form(){
                             required
                             value={formData.phone}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="(555) 123-4567"
                         />
                     </div>
@@ -122,7 +122,7 @@ export default function Form(){
                             required
                             value={formData.guests}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         >
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                                 <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -142,7 +142,7 @@ export default function Form(){
                             value={formData.date}
                             onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         />
                     </div>
 
@@ -157,7 +157,7 @@ export default function Form(){
                             required
                             value={formData.time}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         />
                     </div>
                 </div>
@@ -172,7 +172,7 @@ export default function Form(){
                         rows={4}
                         value={formData.specialRequests}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300 outline-none resize-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none resize-none"
                         placeholder="Any dietary restrictions, special occasions, or requests..."
                     />
                 </div>
@@ -192,7 +192,7 @@ export default function Form(){
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-orange-700/80 hover:bg-orange-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#631732]/80 hover:bg-[#4d1226] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? 'Submitting...' : 'Book Table'}
                 </button>

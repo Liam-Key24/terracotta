@@ -1,6 +1,6 @@
-import BookTableBtnPage from "../components/bookTablebtn-page";
+import { BookTableBtnTwo } from "../components/bookTablebtn";
 import ContactBtn from "../components/contactBtn";
-import MenuBtn from '../components/menuPage-btn'
+import { MenuBtnTwo } from '../components/menuPage-btn'
 
 export default function About() {
   return (
@@ -30,9 +30,9 @@ export default function About() {
           </p>
         </div>
         <div className="w-auto h-30 flex items-center justify-center space-x-3">
-            <BookTableBtnPage/>
+            <BookTableBtnTwo/>
             <ContactBtn/>
-            <MenuBtn/>
+            <MenuBtnTwo />
         </div>
       </div>
     </div>

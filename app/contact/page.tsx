@@ -68,7 +68,7 @@ export default function Contact() {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none"
                         placeholder="Your name"
                     />
                 </div>
@@ -84,7 +84,7 @@ export default function Contact() {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none"
                         placeholder="your.email@example.com"
                     />
                 </div>
@@ -100,7 +100,7 @@ export default function Contact() {
                         required
                         value={formData.subject}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none"
                         placeholder="What is this regarding?"
                     />
                 </div>
@@ -116,7 +116,7 @@ export default function Contact() {
                         rows={6}
                         value={formData.message}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none resize-none"
                         placeholder="Your message..."
                     />
                 </div>
@@ -136,7 +136,7 @@ export default function Contact() {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-orange-700 hover:bg-orange-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#631732] hover:bg-[#4d1226] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>

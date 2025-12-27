@@ -1,22 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ArrowUpRightIcon, ListIcon, XIcon } from '@phosphor-icons/react'
 import Link from 'next/link'
 
 export default function NavBar() {
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Animate navbar in on initial load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true)
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+
+      // Hide navbar while scrolling
+      setIsVisible(false)
+
+      // Show navbar when scroll stops
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsVisible(true)
+      }, 150)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <>
-      {/* NAV */}
-      <nav className="
+      
+      <nav className={`
         fixed top-4 left-1/2 -translate-x-1/2 z-60
         w-[90%] h-12 px-6 flex items-center justify-between
-        rounded-lg glass bg-orange-700/70
+        rounded-lg glass bg-[#631732]/70
         md:w-[96%]
         md:h-18
-      ">
+        transition-all duration-300 ease-in-out
+        ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
+      `}>
         <Link href="/" className="cursor-pointer">
           <h1 className="text-xl text-white md:text-3xl">Terracotta</h1>
         </Link>
@@ -48,7 +86,8 @@ export default function NavBar() {
           glass shadow-lg shadow-black/10
           rounded-lg overflow-hidden
           transition-all duration-300 ease-in-out
-          ${isNavOpen ? 'h-50 opacity-100' : 'h-10 opacity-0'}
+          ${isNavOpen ? 'h-50' : 'h-10 opacity-0'}
+          ${isVisible ? 'translate-y-0' : '-translate-y-full'}
         `}
       >
         {/* CONTENT */}

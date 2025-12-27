@@ -57,8 +57,9 @@ export const drinksData = [
     id: 'cocktails',
     title: 'Cocktails',
     items: [
-      { name: "Gin & tonic", price: "£7.50 | £10" },
-      { name: "Aperol Spritz", price: "£9.95" },
+      { name: "Gin & tonic", price: "£7 | £12" },
+      { name: "Mimosa", price: "£9.95" },
+      { name: "Aperol Spritz", price: "£10.95" },
       { name: "Martini Cocktail", price: "£10.95" },
       { name: "Mojito", price: "£10.95" },
       { name: "White Lady", price: "£10.95" }
@@ -74,9 +75,9 @@ export const drinksData = [
     id: 'beers',
     title: 'Beers',
     items: [
-      { name: "Estrella Galicia", price: "£5" },
-      { name: "Moretti", price: "£5" },
-      { name: "Peroni", price: "£5" }
+      { name: "Estrella Galicia", price: "£4" },
+      { name: "Moretti", price: "£4" },
+      { name: "Peroni", price: "£4" }
     ],
     imagePath: "/assets/menu/Beer-image.jpg",
     imageHeight: "20vh",
@@ -89,13 +90,11 @@ export const drinksData = [
     id: 'soft-drinks',
     title: 'Soft Drinks',
     items: [
-      { name: "Apple Juice", price: "£3" },
-      { name: "Orange Juice", price: "£3" },
+      { name: "Apple / Orange Juice", price: "£3" },
       { name: "Soda Water / Tonic Water", price: "£3" },
-      { name: "Acqua Panna Still Water", price: "£3.50" },
-      { name: "San Pellegrino Sparkling Water", price: "£3.50" },
-      { name: "Coca Cola / Diet Coke", price: "£3.50" },
-      { name: "Lemonade / Fanta", price: "£3.50" }
+      { name: "Acqua Panna Still Water", price: "£2.50" },
+      { name: "San Pellegrino Sparkling Water", price: "£2.50" },
+      { name: "Coca Cola / Diet Coke / Lemonade / Fanta", price: "£3" },
     ],
     imagePath: "/assets/menu/soft-drinks.jpg",
     imageHeight: "40vh",
