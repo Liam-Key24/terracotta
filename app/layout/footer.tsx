@@ -5,7 +5,7 @@ export default function Footer() {
     return (
         <>
             <footer
-                className="w-full py-8 mt-4 bg-orange-700/70 text-white
+                className="w-full py-8 mt-4 bg-[#631732]/70 text-white
                border border-white/20 shadow-lg shadow-black/10
                backdrop-blur-xl rounded-lg
                grid grid-cols-1 md:grid-cols-3 

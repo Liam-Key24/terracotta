@@ -20,7 +20,7 @@ export default function HeroLanding() {
                     </div>
                 </div>
 
-                <div className="relative h-[50vh] md:h-[80vh] inset-0 bg-[url(/assets/hero-background.avif)] bg-cover bg-center rounded-lg"></div>
+                <div className="relative h-[50vh] md:h-[80vh] inset-0 bg-[url(/assets/indoor-2.png)] bg-cover bg-center rounded-lg"></div>
                 <div className="absolute h-[50vh] md:h-[80vh] inset-0 bg-black/30 backdrop-blur-xs rounded-lg"></div>
             </div>
 
