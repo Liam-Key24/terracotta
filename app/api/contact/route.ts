@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../_utils';
 
 // HTML Email Template for Contact Form
 const contactEmailTemplate = (formData: {
@@ -91,25 +92,25 @@ const contactEmailTemplate = (formData: {
         <div class="info-section">
             <div class="info-row">
                 <div class="info-label">Name:</div>
-                <div class="info-value">${formData.name}</div>
+                <div class="info-value">${escapeHtml(formData.name)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Email:</div>
-                <div class="info-value">${formData.email}</div>
+                <div class="info-value">${escapeHtml(formData.email)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Subject:</div>
-                <div class="info-value">${formData.subject}</div>
+                <div class="info-value">${escapeHtml(formData.subject)}</div>
             </div>
             <div class="message-box">
                 <strong>Message:</strong><br><br>
-                ${formData.message.replace(/\n/g, '<br>')}
+                ${escapeHtmlWithBreaks(formData.message)}
             </div>
         </div>
         
         <div class="footer">
             <p>This message was submitted through the Terracotta website contact form.</p>
-            <p>You can reply directly to this email to respond to ${formData.name}.</p>
+            <p>You can reply directly to this email to respond to ${escapeHtml(formData.name)}.</p>
         </div>
     </div>
 </body>
@@ -150,15 +151,40 @@ const createTransporter = () => {
 
 export async function POST(request: NextRequest) {
     try {
-        const formData = await request.json();
+        let body: unknown;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+        }
+
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+
+        const raw = body as Record<string, unknown>;
+        const name = asTrimmedString(raw.name);
+        const email = asTrimmedString(raw.email);
+        const subject = asTrimmedString(raw.subject);
+        const message = asTrimmedString(raw.message);
 
         // Validate required fields
-        if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+        if (!name || !email || !subject || !message) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
+        if (!isValidEmail(email)) {
+            return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
+        }
+
+        const formData = {
+            name: clampLength(name, 100),
+            email: clampLength(email, 254),
+            subject: clampLength(subject, 200),
+            message: clampLength(message, 5000),
+        };
 
         // Create transporter for sending emails
         const transporter = createTransporter();
@@ -211,7 +237,7 @@ You can reply directly to this email to respond to ${formData.name}.
 }
 
 // GET endpoint (optional - for testing)
-export async function GET(request: NextRequest) {
+export async function GET() {
     return NextResponse.json(
         { message: 'Contact API endpoint. Use POST to submit a contact form.' },
         { status: 200 }

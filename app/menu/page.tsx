@@ -6,8 +6,7 @@ import { foodData } from '../data/foodData'
 import { drinksData } from '../data/drinksData'
 
 import MenuSectionWrapper from './component/MenuSectionWrapper'
-import Contact from '../components/contactBtn'
-import BookTableBtn from '../components/bookTablebtn'
+import { CtaLinkButton } from '../components/CtaLinkButton'
 
 export default function Menu() {
   const [activeTab, setActiveTab] = useState<'menu' | 'wine' | 'drink'>('menu')
@@ -73,8 +72,19 @@ export default function Menu() {
       </div>
 
       <div className="flex justify-center space-x-2 my-5" aria-label="Action buttons">
-        <BookTableBtn />
-        <Contact />
+        <CtaLinkButton
+          href="/#form"
+          label="Book table"
+          ariaLabel="Book a table"
+          className="group w-32 md:w-56 h-fit py-2 md:p-3 flex items-center justify-center space-x-2 rounded-2xl bg-[#631732]/70 text-white"
+          labelClassName="text-lg md:text-2xl pl-1"
+        />
+        <CtaLinkButton
+          href="/contact"
+          label="Contact"
+          ariaLabel="Contact us"
+          className="group w-32 md:w-56 h-fit py-2 md:p-3 flex items-center justify-center space-x-2 rounded-2xl bg-[#631732]/70 text-white"
+        />
       </div>
 
       <div className="w-4/5 mx-auto">

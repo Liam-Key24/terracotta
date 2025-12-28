@@ -62,7 +62,7 @@ export default function Form(){
         <div className="w-full max-w-2xl mx-auto p-6 md:p-8" id='form'>
             <h2 className="text-3xl font-light text-center mb-8 text-[#631732]/70">Make a Reservation</h2>
             
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -75,6 +75,7 @@ export default function Form(){
                             required
                             value={formData.name}
                             onChange={handleChange}
+                            autoComplete="name"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="John Doe"
                         />
@@ -91,6 +92,8 @@ export default function Form(){
                             required
                             value={formData.email}
                             onChange={handleChange}
+                            autoComplete="email"
+                            inputMode="email"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="john@example.com"
                         />
@@ -107,6 +110,8 @@ export default function Form(){
                             required
                             value={formData.phone}
                             onChange={handleChange}
+                            autoComplete="tel"
+                            inputMode="tel"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="(555) 123-4567"
                         />
@@ -142,6 +147,7 @@ export default function Form(){
                             value={formData.date}
                             onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
+                            autoComplete="off"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         />
                     </div>
@@ -157,6 +163,7 @@ export default function Form(){
                             required
                             value={formData.time}
                             onChange={handleChange}
+                            autoComplete="off"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         />
                     </div>
@@ -178,13 +185,13 @@ export default function Form(){
                 </div>
 
                 {submitStatus === 'success' && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-                        ✓ Reservation submitted successfully! We'll contact you soon to confirm.
+                    <div role="status" aria-live="polite" className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                        ✓ Reservation submitted successfully! We&apos;ll contact you soon to confirm.
                     </div>
                 )}
 
                 {submitStatus === 'error' && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700/30">
+                    <div role="alert" aria-live="assertive" className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                         ✗ There was an error submitting your reservation. Please try again or call us directly.
                     </div>
                 )}

@@ -1,5 +1,3 @@
-import type { Metadata } from "next";
-
 import NavBar from './layout/navbar'
 import Footer from "./layout/footer";
 import { Analytics } from "@vercel/analytics/next";

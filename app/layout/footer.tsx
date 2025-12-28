@@ -19,24 +19,30 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="flex flex-col h-fit w-full lg:flex-row items-center justify-center lg:space-x-4 ">
+                <div className="flex h-fit w-full flex-row items-center justify-center space-x-4 my-3">
                     <Link href="/" className="text-xl hover:text-white/80">Menu</Link>
                     <Link href="#form" className="text-xl hover:text-white/80">Book Table</Link>
                     <Link href="/about" className="text-xl hover:text-white/80">About</Link>
                 </div>
 
                 <div className="flex flex-col items-center space-y-3">
-                    <span className="flex items-center space-x-2 hover:text-white/80">
+                    <a
+                        href="tel:02046298759"
+                        className="flex items-center space-x-2 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#631732]/70 rounded-md"
+                        aria-label="Call 020 4629 8759"
+                    >
                         <PhoneCallIcon size={20} />
-                        <p>020 4629 8759</p>
-                    </span>
+                        <span>020 4629 8759</span>
+                    </a>
 
-                    <span className="flex items-center space-x-2 hover:text-white/80">
+                    <a
+                        href="mailto:info@terracotta-acton.com"
+                        className="flex items-center space-x-2 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#631732]/70 rounded-md"
+                        aria-label="Email info@terracotta-acton.com"
+                    >
                         <AtIcon size={20} />
-                        <a href="mailto:info@terracotta-acton.com">
-                            info@terracotta-acton.com
-                        </a>
-                    </span>
+                        <span>info@terracotta-acton.com</span>
+                    </a>
                 </div>
 
             </footer>

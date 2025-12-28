@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../../_utils';
 
 // HTML Email Template for Customer Confirmation
 const customerConfirmationEmailTemplate = (formData: {
@@ -70,14 +71,14 @@ const customerConfirmationEmailTemplate = (formData: {
 <body>
     <div class="card">
         <div class="badge">✓ Booking confirmed</div>
-        <h1>Hi ${formData.name},</h1>
+        <h1>Hi ${escapeHtml(formData.name)},</h1>
         <p>Your table at Terracotta is confirmed. We’re excited to host you!</p>
 
         <div class="details">
-            <p><strong>Date:</strong> ${formData.date}</p>
-            <p><strong>Time:</strong> ${formData.time}</p>
-            <p><strong>Guests:</strong> ${formData.guests}</p>
-            ${formData.specialRequests ? `<p><strong>Notes:</strong> ${formData.specialRequests.replace(/\n/g, '<br>')}</p>` : ''}
+            <p><strong>Date:</strong> ${escapeHtml(formData.date)}</p>
+            <p><strong>Time:</strong> ${escapeHtml(formData.time)}</p>
+            <p><strong>Guests:</strong> ${escapeHtml(formData.guests)}</p>
+            ${formData.specialRequests ? `<p><strong>Notes:</strong> ${escapeHtmlWithBreaks(formData.specialRequests)}</p>` : ''}
         </div>
 
         <p style="margin-top:24px;">If you need to adjust anything, just reply to this email. See you soon!</p>
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const token = searchParams.get('token');
 
-        if (!token) {
+        if (!token || token.length > 8000) {
             return new NextResponse(`
                 <!DOCTYPE html>
                 <html>
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
         try {
             const decoded = Buffer.from(decodeURIComponent(token), 'base64').toString('utf-8');
             formData = JSON.parse(decoded);
-        } catch (error) {
+        } catch {
             return new NextResponse(`
                 <!DOCTYPE html>
                 <html>
@@ -173,7 +174,20 @@ export async function GET(request: NextRequest) {
         }
 
         // Validate required fields
-        if (!formData.name || !formData.email || !formData.phone || !formData.date || !formData.time || !formData.guests) {
+        if (!formData || typeof formData !== 'object') {
+            throw new Error('Invalid token payload');
+        }
+
+        const raw = formData as Record<string, unknown>;
+        const name = asTrimmedString(raw.name);
+        const email = asTrimmedString(raw.email);
+        const phone = asTrimmedString(raw.phone);
+        const date = asTrimmedString(raw.date);
+        const time = asTrimmedString(raw.time);
+        const guests = asTrimmedString(raw.guests);
+        const specialRequestsRaw = asTrimmedString(raw.specialRequests);
+
+        if (!name || !email || !phone || !date || !time || !guests) {
             return new NextResponse(`
                 <!DOCTYPE html>
                 <html>
@@ -194,28 +208,44 @@ export async function GET(request: NextRequest) {
                 headers: { 'Content-Type': 'text/html' },
             });
         }
+        if (!isValidEmail(email)) {
+            return new NextResponse(
+                '<!DOCTYPE html><html><head><title>Error</title></head><body><h1 class="error">Invalid email</h1><p>The reservation email is invalid.</p></body></html>',
+                { status: 400, headers: { 'Content-Type': 'text/html' } }
+            );
+        }
+
+        const safeFormData = {
+            name: clampLength(name, 100),
+            email: clampLength(email, 254),
+            phone: clampLength(phone, 50),
+            date: clampLength(date, 20),
+            time: clampLength(time, 20),
+            guests: clampLength(guests, 10),
+            ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
+        };
 
         // Create transporter for sending emails
         const transporter = createTransporter();
 
         // Generate HTML confirmation email for customer
-        const htmlEmail = customerConfirmationEmailTemplate(formData);
+        const htmlEmail = customerConfirmationEmailTemplate(safeFormData);
 
         // Send confirmation email to customer
         const mailOptions = {
             from: SMTP_USER
                 ? `"Terracotta Restaurant" <${SMTP_USER}>`
                 : '"Terracotta Restaurant" <no-reply@terracotta.local>',
-            to: formData.email,
-            subject: `Reservation Confirmed - ${formData.date} at ${formData.time}`,
+            to: safeFormData.email,
+            subject: `Reservation Confirmed - ${safeFormData.date} at ${safeFormData.time}`,
             html: htmlEmail,
             text: `
 Booking confirmed!
 
-Hi ${formData.name},
+Hi ${safeFormData.name},
 
-Your table at Terracotta is confirmed for ${formData.date} at ${formData.time} (${formData.guests} guests).
-${formData.specialRequests ? `Notes: ${formData.specialRequests}` : ''}
+Your table at Terracotta is confirmed for ${safeFormData.date} at ${safeFormData.time} (${safeFormData.guests} guests).
+${safeFormData.specialRequests ? `Notes: ${safeFormData.specialRequests}` : ''}
 
 Reply to this email if you need anything. See you soon!
             `.trim(),
@@ -283,24 +313,24 @@ Reply to this email if you need anything. See you soon!
                 <div class="container">
                     <div class="success">✓</div>
                     <h1>Reservation Confirmed!</h1>
-                    <p>A confirmation email has been sent to <strong>${formData.email}</strong></p>
+                    <p>A confirmation email has been sent to <strong>${escapeHtml(safeFormData.email)}</strong></p>
                     
                     <div class="details">
                         <div class="detail-row">
                             <span class="label">Guest:</span>
-                            <span>${formData.name}</span>
+                            <span>${escapeHtml(safeFormData.name)}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Date:</span>
-                            <span>${formData.date}</span>
+                            <span>${escapeHtml(safeFormData.date)}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Time:</span>
-                            <span>${formData.time}</span>
+                            <span>${escapeHtml(safeFormData.time)}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Guests:</span>
-                            <span>${formData.guests}</span>
+                            <span>${escapeHtml(safeFormData.guests)}</span>
                         </div>
                     </div>
                     

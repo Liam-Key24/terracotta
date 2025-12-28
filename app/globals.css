@@ -6,7 +6,7 @@
 }
 
 @utility glass{
-  @apply bg-[#631732]/30 border border-white/20 shadow-lg shadow-black/10 backdrop-blur-xl;
+  @apply bg-[#631732]/30 border border-white/20 shadow-lg shadow-black/10 backdrop-blur-xl rounded-2xl;
 }
 
 @utility font-roboto-condensed {

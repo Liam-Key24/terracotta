@@ -48,7 +48,7 @@ export default function Contact() {
     return (
         <div className="relative min-h-screen pt-32 pb-16 px-6 md:px-12">
             <div className="absolute inset-0 h-[32vh] bg-[url(/assets/hero-background.avif)] bg-cover bg-center rounded-lg" />
-            <div className="absolute inset-0 h-[32vh] bg-black/30 backdrop-blur-xs rounded-lg" />
+            <div className="absolute inset-0 h-[32vh] bg-black/30 backdrop-blur-sm rounded-lg" />
 
             <div className="relative max-w-2xl mx-auto z-10">
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center">
@@ -56,7 +56,7 @@ export default function Contact() {
                 </h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6 bg-white rounded-lg shadow-lg p-6 mt-35 lg:mt-40 md:p-8">
+            <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="max-w-2xl mx-auto space-y-6 bg-white rounded-lg shadow-lg p-6 mt-35 lg:mt-40 md:p-8">
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                         Name *
@@ -68,6 +68,7 @@ export default function Contact() {
                         required
                         value={formData.name}
                         onChange={handleChange}
+                        autoComplete="name"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none"
                         placeholder="Your name"
                     />
@@ -84,6 +85,8 @@ export default function Contact() {
                         required
                         value={formData.email}
                         onChange={handleChange}
+                        autoComplete="email"
+                        inputMode="email"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none"
                         placeholder="your.email@example.com"
                     />
@@ -100,6 +103,7 @@ export default function Contact() {
                         required
                         value={formData.subject}
                         onChange={handleChange}
+                        autoComplete="off"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1f3f] focus:border-[#7a1f3f] outline-none"
                         placeholder="What is this regarding?"
                     />
@@ -122,13 +126,13 @@ export default function Contact() {
                 </div>
 
                 {submitStatus === 'success' && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-                        ✓ Message sent successfully! We'll get back to you soon.
+                    <div role="status" aria-live="polite" className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                        ✓ Message sent successfully! We&apos;ll get back to you soon.
                     </div>
                 )}
 
                 {submitStatus === 'error' && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                    <div role="alert" aria-live="assertive" className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                         ✗ There was an error sending your message. Please try again or call us directly.
                     </div>
                 )}

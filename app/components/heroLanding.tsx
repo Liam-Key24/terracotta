@@ -9,7 +9,7 @@ export default function HeroLanding() {
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
                     <div className="space-y-5 md:w-fit md:flex md:flex-col md:items-center">
                         <h1 className="text-white text-3xl md:text-5xl text-center">
-                            Sun filled flavours, shared plates, <br /> flowing wine
+                            Sun filled flavours, <br /> shared plates,  flowing wine
                         </h1>
                         <h2 className="text-white text-lg md:text-2xl text-center">
                             Your Mediterranean escape starts here

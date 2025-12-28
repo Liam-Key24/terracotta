@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../_utils';
 
 // HTML Email Template for Owner
 const reservationEmailTemplate = (formData: {
@@ -117,32 +118,32 @@ const reservationEmailTemplate = (formData: {
         <div class="info-section">
             <div class="info-row">
                 <div class="info-label">Guest Name:</div>
-                <div class="info-value">${formData.name}</div>
+                <div class="info-value">${escapeHtml(formData.name)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Email:</div>
-                <div class="info-value">${formData.email}</div>
+                <div class="info-value">${escapeHtml(formData.email)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Phone:</div>
-                <div class="info-value">${formData.phone}</div>
+                <div class="info-value">${escapeHtml(formData.phone)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Date:</div>
-                <div class="info-value">${formData.date}</div>
+                <div class="info-value">${escapeHtml(formData.date)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Time:</div>
-                <div class="info-value">${formData.time}</div>
+                <div class="info-value">${escapeHtml(formData.time)}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Number of Guests:</div>
-                <div class="info-value">${formData.guests}</div>
+                <div class="info-value">${escapeHtml(formData.guests)}</div>
             </div>
             ${formData.specialRequests ? `
             <div class="special-requests">
                 <strong>Special Requests:</strong><br>
-                ${formData.specialRequests.replace(/\n/g, '<br>')}
+                ${escapeHtmlWithBreaks(formData.specialRequests)}
             </div>
             ` : ''}
         </div>
@@ -195,15 +196,48 @@ const createTransporter = () => {
 
 export async function POST(request: NextRequest) {
     try {
-        const formData = await request.json();
+        let body: unknown;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+        }
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+
+        const raw = body as Record<string, unknown>;
+        const name = asTrimmedString(raw.name);
+        const email = asTrimmedString(raw.email);
+        const phone = asTrimmedString(raw.phone);
+        const date = asTrimmedString(raw.date);
+        const time = asTrimmedString(raw.time);
+        const guests = asTrimmedString(raw.guests);
+        const specialRequestsRaw = asTrimmedString(raw.specialRequests);
 
         // Validate required fields
-        if (!formData.name || !formData.email || !formData.phone || !formData.date || !formData.time || !formData.guests) {
+        if (!name || !email || !phone || !date || !time || !guests) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
+        if (!isValidEmail(email)) {
+            return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
+        }
+        if (!/^\d+$/.test(guests) || Number(guests) < 1 || Number(guests) > 20) {
+            return NextResponse.json({ error: 'Invalid guests' }, { status: 400 });
+        }
+
+        const formData = {
+            name: clampLength(name, 100),
+            email: clampLength(email, 254),
+            phone: clampLength(phone, 50),
+            date: clampLength(date, 20),
+            time: clampLength(time, 20),
+            guests,
+            ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
+        };
 
         // Create transporter for sending emails
         const transporter = createTransporter();
@@ -212,9 +246,12 @@ export async function POST(request: NextRequest) {
         const confirmationToken = Buffer.from(JSON.stringify(formData)).toString('base64');
         
         // Get base URL for confirmation link
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                       request.headers.get('origin') || 
-                       'https://terracotta-acton.com';
+        const origin = request.headers.get('origin') || '';
+        const allowedOrigins = new Set(['http://localhost:3000', 'https://terracotta-acton.com']);
+        const baseUrl =
+            process.env.NEXT_PUBLIC_BASE_URL ||
+            (allowedOrigins.has(origin) ? origin : '') ||
+            'https://terracotta-acton.com';
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
         
         // Generate HTML email using the template
@@ -265,7 +302,7 @@ Please confirm this reservation with the guest as soon as possible.
 }
 
 // GET endpoint (optional - for testing or retrieving reservations)
-export async function GET(request: NextRequest) {
+export async function GET() {
     return NextResponse.json(
         { message: 'Reservation API endpoint. Use POST to submit a reservation.' },
         { status: 200 }
