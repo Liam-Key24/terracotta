@@ -14,14 +14,13 @@ export default function Footer() {
                 <div className="flex flex-col items-center text-center">
                     <h1 className="text-6xl">Terracotta</h1>
                     <div className="flex items-center space-x-2">
-                        <p className="text-lg">Mon - Sun</p>
-                        <p className="text-lg">10am - 10pm</p>
+                        <p className="text-lg">Mon - Sun  | 10am - 10pm</p>
                     </div>
                 </div>
 
                 <div className="flex h-fit w-full flex-row items-center justify-center space-x-4 my-3">
-                    <Link href="/" className="text-xl hover:text-white/80">Menu</Link>
-                    <Link href="#form" className="text-xl hover:text-white/80">Book Table</Link>
+                    <Link href="/menu" className="text-xl hover:text-white/80">Menu</Link>
+                    <Link href="/#form" className="text-xl hover:text-white/80">Book Table</Link>
                     <Link href="/about" className="text-xl hover:text-white/80">About</Link>
                 </div>
 

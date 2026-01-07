@@ -26,6 +26,7 @@ export default function NavBar() {
 
       // Hide navbar while scrolling
       setIsVisible(false)
+      setIsNavOpen(false)
 
       // Show navbar when scroll stops
       scrollTimeoutRef.current = setTimeout(() => {
@@ -86,19 +87,21 @@ export default function NavBar() {
           glass shadow-lg shadow-black/10
           rounded-lg overflow-hidden
           transition-all duration-300 ease-in-out
-          ${isNavOpen ? 'h-50' : 'h-10 opacity-0'}
+          ${isNavOpen ? 'h-fit pb-2' : 'h-10 opacity-0'}
           ${isVisible ? 'translate-y-0' : '-translate-y-full'}
         `}
       >
         {/* CONTENT */}
         <div
           className={`
-            flex flex-col items-center gap-4
+            w-3/4 mx-auto
+            grid grid-cols-2 place-items-center gap-2
             text-white transition-[max-height,opacity,padding]
             duration-300 ease-in-out
-            ${isNavOpen ? 'opacity-100 max-h-96 pt-15' : 'opacity-0 max-h-0 pt-0'}
+            ${isNavOpen ? 'opacity-100 max-h-fit pt-15' : 'opacity-0 max-h-0 pt-0'}
           `}
         >
+          <Link href="/" className="text-xl cursor-pointer">Home</Link>
           <Link href="/about" className="text-xl cursor-pointer">About</Link>
           <Link href="/menu" className="text-xl cursor-pointer">Menu</Link>
           <Link href="/contact" className="text-xl cursor-pointer">Contact</Link>

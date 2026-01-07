@@ -136,7 +136,7 @@ export default function Form(){
                     </div>
 
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2 w-full">
                             Date *
                         </label>
                         <input
@@ -153,7 +153,7 @@ export default function Form(){
                     </div>
 
                     <div>
-                        <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2 w-full">
                             Time *
                         </label>
                         <input
