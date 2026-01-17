@@ -9,6 +9,7 @@ const reservationEmailTemplate = (formData: {
     phone: string;
     date: string;
     time: string;
+    location: string;
     guests: string;
     specialRequests?: string;
 }, confirmationUrl: string) => {
@@ -137,6 +138,10 @@ const reservationEmailTemplate = (formData: {
                 <div class="info-value">${escapeHtml(formData.time)}</div>
             </div>
             <div class="info-row">
+                <div class="info-label">Place:</div>
+                <div class="info-value">${escapeHtml(formData.location)}</div>
+            </div>
+            <div class="info-row">
                 <div class="info-label">Number of Guests:</div>
                 <div class="info-value">${escapeHtml(formData.guests)}</div>
             </div>
@@ -212,11 +217,12 @@ export async function POST(request: NextRequest) {
         const phone = asTrimmedString(raw.phone);
         const date = asTrimmedString(raw.date);
         const time = asTrimmedString(raw.time);
+        const location = asTrimmedString(raw.location);
         const guests = asTrimmedString(raw.guests);
         const specialRequestsRaw = asTrimmedString(raw.specialRequests);
 
         // Validate required fields
-        if (!name || !email || !phone || !date || !time || !guests) {
+        if (!name || !email || !phone || !date || !time || !location || !guests) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -235,6 +241,7 @@ export async function POST(request: NextRequest) {
             phone: clampLength(phone, 50),
             date: clampLength(date, 20),
             time: clampLength(time, 20),
+            location: clampLength(location, 10),
             guests,
             ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
         };
@@ -274,6 +281,7 @@ Email: ${formData.email}
 Phone: ${formData.phone}
 Date: ${formData.date}
 Time: ${formData.time}
+Place: ${formData.location}
 Number of Guests: ${formData.guests}
 ${formData.specialRequests ? `Special Requests: ${formData.specialRequests}` : ''}
 

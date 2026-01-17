@@ -9,6 +9,7 @@ export default function Form(){
         phone: '',
         date: '',
         time: '',
+        location: '',
         guests: '2',
         specialRequests: ''
     });
@@ -16,10 +17,25 @@ export default function Form(){
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
+        const { name, value } = e.target;
+        if (name === 'insideTime') {
+            setFormData(prev => ({
+                ...prev,
+                time: value,
+                location: 'inside'
+            }));
+        } else if (name === 'outsideTime') {
+            setFormData(prev => ({
+                ...prev,
+                time: value,
+                location: 'outside'
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -44,6 +60,7 @@ export default function Form(){
                     phone: '',
                     date: '',
                     time: '',
+                    location: '',
                     guests: '2',
                     specialRequests: ''
                 });
@@ -63,7 +80,7 @@ export default function Form(){
             <h2 className="text-3xl font-light text-center mb-8 text-[#631732]/70">Make a Reservation</h2>
             
             <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                             Full Name *
@@ -153,19 +170,43 @@ export default function Form(){
                     </div>
 
                     <div>
-                        <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2 w-full">
-                            Time *
-                        </label>
-                        <input
-                            type="time"
-                            id="time"
-                            name="time"
-                            required
-                            value={formData.time}
-                            onChange={handleChange}
-                            autoComplete="off"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
-                        />
+                    
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="insideTime" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Inside
+                                </label>
+                                <select
+                                    id="insideTime"
+                                    name="insideTime"
+                                    value={formData.location === 'inside' ? formData.time : ''}
+                                    onChange={handleChange}
+                                    className="w-full px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                                >
+                                    <option value="">Select time</option>
+                                    <option value="6pm-7:30pm">6pm-7:30pm</option>
+                                    <option value="7:30pm-9pm">7:30pm-9pm</option>
+                                    <option value="9pm">9pm</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="outsideTime" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Outside
+                                </label>
+                                <select
+                                    id="outsideTime"
+                                    name="outsideTime"
+                                    value={formData.location === 'outside' ? formData.time : ''}
+                                    onChange={handleChange}
+                                    className="w-full px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                                >
+                                    <option value="">Select time</option>
+                                    <option value="6-7:30pm">6-7:30pm</option>
+                                    <option value="7:30-9pm">7:30-9pm</option>
+                                    <option value="9pm">9pm</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
