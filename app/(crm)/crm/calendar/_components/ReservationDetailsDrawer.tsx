@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { SLOTS_30 } from '../constants';
-import type { Reservation } from '../types';
-import { getReservationDetails } from '../utils';
+import { TableReservationPopup } from './TableReservationPopup';
+import type { Reservation, Table } from '../types';
+import { formatTimeRangeLabel, getDurationMinutes, getReservationDetails, parseTimeToMinutes } from '../utils';
 
 type ReservationEditDraft = {
     name: string;
@@ -12,10 +13,12 @@ type ReservationEditDraft = {
     time: string;
     guests: string;
     notes: string;
+    tableIds: string[];
 };
 
 type ReservationDetailsDrawerProps = {
     reservation: Reservation;
+    tables: Table[];
     onClose: () => void;
     onUpdated: (reservation: Reservation) => void;
     onCancelled: (reservationId: string) => void;
@@ -30,11 +33,13 @@ function toDraft(reservation: Reservation): ReservationEditDraft {
         time: reservation.time ?? '18:00',
         guests: reservation.guests ?? '2',
         notes: reservation.notes ?? '',
+        tableIds: reservation.tableIds ?? [],
     };
 }
 
 export function ReservationDetailsDrawer({
     reservation,
+    tables,
     onClose,
     onUpdated,
     onCancelled,
@@ -48,8 +53,18 @@ export function ReservationDetailsDrawer({
     const [cancelReason, setCancelReason] = useState('');
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
+    const [previewTableId, setPreviewTableId] = useState<string | null>(null);
 
     const details = useMemo(() => getReservationDetails(reservation), [reservation]);
+    const tableMap = useMemo(() => new Map(tables.map((table) => [table.id, table])), [tables]);
+    const popupTable = previewTableId ? tableMap.get(previewTableId) : null;
+    const popupTime = isEditing ? draft.time : reservation.time;
+    const popupGuests = isEditing ? draft.guests : reservation.guests;
+    const popupTimeLabel = useMemo(() => {
+        const start = parseTimeToMinutes(popupTime);
+        const end = start + getDurationMinutes(popupGuests);
+        return formatTimeRangeLabel(start, end);
+    }, [popupTime, popupGuests]);
 
     useEffect(() => {
         setIsEditing(false);
@@ -61,6 +76,7 @@ export function ReservationDetailsDrawer({
         setCancelReason('');
         setCancelError(null);
         setIsCancelling(false);
+        setPreviewTableId(null);
     }, [reservation]);
 
     async function saveEdits(e: FormEvent) {
@@ -85,6 +101,7 @@ export function ReservationDetailsDrawer({
                     time: draft.time.trim(),
                     guests: draft.guests.trim(),
                     notes: draft.notes.trim(),
+                    tableIds: draft.tableIds,
                 }),
             });
 
@@ -150,13 +167,26 @@ export function ReservationDetailsDrawer({
         setCancelError(null);
     }
 
+    function toggleDraftTable(id: string) {
+        const isAlreadySelected = draft.tableIds.includes(id);
+        setDraft((prev) => ({
+            ...prev,
+            tableIds: isAlreadySelected ? prev.tableIds.filter((x) => x !== id) : [...prev.tableIds, id],
+        }));
+        if (isAlreadySelected) {
+            setPreviewTableId((prev) => (prev === id ? null : prev));
+            return;
+        }
+        setPreviewTableId(id);
+    }
+
     function toggleCancelReason() {
         setIsCancelReasonOpen((prev) => !prev);
         setCancelError(null);
     }
 
     return (
-        <div className="fixed inset-0 bg-black/45 flex justify-end z-30" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/45 flex justify-end z-[100]" onClick={onClose}>
             <aside
                 className="h-full w-full max-w-[560px] bg-white shadow-2xl overflow-hidden rounded-l-2xl flex flex-col"
                 onClick={(e) => e.stopPropagation()}
@@ -222,6 +252,26 @@ export function ReservationDetailsDrawer({
                             </div>
 
                             <div className="px-6 py-5 border-b border-slate-200 bg-white">
+                                <p className="text-sm font-medium text-slate-500 mb-2">Table assignment</p>
+                                {reservation.tableIds?.length ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {reservation.tableIds.map((tableId) => (
+                                            <button
+                                                key={tableId}
+                                                type="button"
+                                                onClick={() => setPreviewTableId(tableId)}
+                                                className="px-3 py-1.5 rounded-lg border border-[#631732]/25 text-[#631732] bg-[#631732]/10 text-sm font-medium hover:bg-[#631732]/15"
+                                            >
+                                                {tableMap.get(tableId)?.label ?? `Table ${tableId}`}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-slate-500">No tables assigned.</p>
+                                )}
+                            </div>
+
+                            <div className="px-6 py-5 border-b border-slate-200 bg-white">
                                 <p className="text-sm font-medium text-slate-500 mb-2">Notes</p>
                                 <p className="text-xl leading-snug text-slate-900">
                                     {reservation.notes?.trim() ? reservation.notes : 'No notes added.'}
@@ -266,6 +316,25 @@ export function ReservationDetailsDrawer({
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Table(s)</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {tables.map((table) => (
+                                            <button
+                                                key={table.id}
+                                                type="button"
+                                                onClick={() => toggleDraftTable(table.id)}
+                                                className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${
+                                                    draft.tableIds.includes(table.id)
+                                                        ? 'bg-[#631732] text-white border-[#631732]'
+                                                        : 'border-slate-300 text-slate-700 hover:border-slate-400'
+                                                }`}
+                                            >
+                                                {table.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Guests</label>
@@ -383,6 +452,17 @@ export function ReservationDetailsDrawer({
                     )}
                 </div>
             </aside>
+            <TableReservationPopup
+                open={Boolean(previewTableId)}
+                tableLabel={popupTable?.label ?? (previewTableId ? `Table ${previewTableId}` : 'Unknown table')}
+                timeLabel={popupTimeLabel}
+                name={isEditing ? draft.name : reservation.name}
+                guests={isEditing ? draft.guests : reservation.guests}
+                notes={isEditing ? draft.notes : reservation.notes}
+                phone={isEditing ? draft.phone : reservation.phone}
+                email={isEditing ? draft.email : reservation.email}
+                onClose={() => setPreviewTableId(null)}
+            />
         </div>
     );
 }

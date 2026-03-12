@@ -107,6 +107,7 @@ export default function CrmCalendarPage() {
             {selected && (
                 <ReservationDetailsDrawer
                     reservation={selected}
+                    tables={tables}
                     onClose={() => setSelected(null)}
                     onUpdated={handleReservationUpdated}
                     onCancelled={handleReservationCancelled}

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
+import { TableReservationPopup } from './TableReservationPopup';
 import { SLOTS_30 } from '../constants';
 import type { ReservationCreateInput, Table } from '../types';
+import { formatTimeRangeLabel, getDurationMinutes, parseTimeToMinutes } from '../utils';
 
 type AddBookingModalProps = {
     date: string;
@@ -18,9 +20,26 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
     const [guests, setGuests] = useState('2');
     const [notes, setNotes] = useState('');
     const [tableIds, setTableIds] = useState<string[]>([]);
+    const [previewTableId, setPreviewTableId] = useState<string | null>(null);
+
+    const previewTable = useMemo(
+        () => (previewTableId ? tables.find((table) => table.id === previewTableId) ?? null : null),
+        [tables, previewTableId]
+    );
+    const timeLabel = useMemo(() => {
+        const start = parseTimeToMinutes(time);
+        const end = start + getDurationMinutes(guests);
+        return formatTimeRangeLabel(start, end);
+    }, [time, guests]);
 
     function toggleTable(id: string) {
-        setTableIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+        const isAlreadySelected = tableIds.includes(id);
+        setTableIds((prev) => (isAlreadySelected ? prev.filter((x) => x !== id) : [...prev, id]));
+        if (isAlreadySelected) {
+            setPreviewTableId((prev) => (prev === id ? null : prev));
+            return;
+        }
+        setPreviewTableId(id);
     }
 
     function submit(e: FormEvent) {
@@ -114,6 +133,20 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
                                 </button>
                             ))}
                         </div>
+                        {tableIds.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {tableIds.map((tableId) => (
+                                    <button
+                                        key={tableId}
+                                        type="button"
+                                        onClick={() => setPreviewTableId(tableId)}
+                                        className="px-2 py-1 rounded-md bg-[#631732]/10 text-[#631732] border border-[#631732]/25 text-xs font-medium hover:bg-[#631732]/15"
+                                    >
+                                        View {tables.find((table) => table.id === tableId)?.label ?? `Table ${tableId}`}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
@@ -129,6 +162,17 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
                     </button>
                 </form>
             </div>
+            <TableReservationPopup
+                open={Boolean(previewTableId)}
+                tableLabel={previewTable?.label ?? (previewTableId ? `Table ${previewTableId}` : 'Unknown table')}
+                timeLabel={timeLabel}
+                name={name}
+                guests={guests}
+                notes={notes}
+                phone={phone}
+                email={email}
+                onClose={() => setPreviewTableId(null)}
+            />
         </div>
     );
 }
