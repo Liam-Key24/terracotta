@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AddBookingModal } from './_components/AddBookingModal';
 import { CalendarHeader } from './_components/CalendarHeader';
 import { DayColumn } from './_components/DayColumn';
@@ -11,11 +12,18 @@ import type { Reservation, ReservationCreateInput, Table } from './types';
 import { addDays, buildCalendarData, getHeaderDateLabel, getMonday } from './utils';
 
 export default function CrmCalendarPage() {
+    const searchParams = useSearchParams();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [tables, setTables] = useState<Table[]>([]);
-    const [startDate, setStartDate] = useState(() => getMonday(new Date().toISOString().slice(0, 10)));
     const [selected, setSelected] = useState<Reservation | null>(null);
     const [addOpen, setAddOpen] = useState(false);
+
+    const globalDate = (() => {
+        const candidate = searchParams.get('date');
+        if (candidate && /^\d{4}-\d{2}-\d{2}$/.test(candidate)) return candidate;
+        return new Date().toISOString().slice(0, 10);
+    })();
+    const startDate = useMemo(() => getMonday(globalDate), [globalDate]);
 
     function refetchReservations() {
         fetch('/api/crm/reservations')
@@ -63,21 +71,6 @@ export default function CrmCalendarPage() {
         setAddOpen(false);
     }
 
-    function navWeek(delta: number) {
-        const d = new Date(startDate + 'T00:00:00');
-        d.setDate(d.getDate() + delta * 7);
-        setStartDate(d.toISOString().slice(0, 10));
-    }
-
-    function goToToday() {
-        const today = new Date().toISOString().slice(0, 10);
-        setStartDate(getMonday(today));
-    }
-
-    function onDatePickerChange(iso: string) {
-        setStartDate(getMonday(iso));
-    }
-
     function handleReservationUpdated(updated: Reservation) {
         setReservations((prev) => prev.map((reservation) => (reservation.id === updated.id ? updated : reservation)));
         setSelected(updated);
@@ -92,11 +85,6 @@ export default function CrmCalendarPage() {
         <div className="bg-gradient-to-br from-[#f3e8ff] via-[#fdf2ff] to-[#fee2e2] rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden flex flex-col max-h-[calc(100vh-5rem)] min-h-[560px]">
             <CalendarHeader
                 headerDateLabel={headerDateLabel}
-                startDate={startDate}
-                onPrevWeek={() => navWeek(-1)}
-                onNextWeek={() => navWeek(1)}
-                onToday={goToToday}
-                onDateChange={onDatePickerChange}
                 onOpenAddBooking={() => setAddOpen(true)}
             />
 
@@ -127,7 +115,7 @@ export default function CrmCalendarPage() {
 
             {addOpen && (
                 <AddBookingModal
-                    date={startDate}
+                    date={globalDate}
                     tables={tables}
                     onClose={() => setAddOpen(false)}
                     onAdd={addBooking}
