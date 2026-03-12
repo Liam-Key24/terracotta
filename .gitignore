@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# reservation store (contains guest PII; use a database in production)
+/data/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

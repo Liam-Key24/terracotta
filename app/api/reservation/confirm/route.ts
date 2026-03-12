@@ -1,9 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
 import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../../_utils';
+import { confirmationId, getAllReservations } from '../_store';
+import { addToQueue, listQueue } from '../_queue';
 
-// HTML Email Template for Customer Confirmation
-const customerConfirmationEmailTemplate = (formData: {
+const successPage = (message: string, safeFormData: { name: string; date: string; time: string; guests: string; email: string }) =>
+    `<!DOCTYPE html>
+<html>
+<head>
+    <title>Reservation</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #16a34a; font-size: 48px; margin-bottom: 20px; }
+        h1 { color: #16a34a; margin-bottom: 20px; }
+        .details { text-align: left; background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .detail-row { padding: 8px 0; border-bottom: 1px solid #e5e5e5; }
+        .detail-row:last-child { border-bottom: none; }
+        .label { font-weight: bold; color: #16a34a; display: inline-block; width: 120px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success">✓</div>
+        <h1>${escapeHtml(message)}</h1>
+        <p>${message.includes('Already') ? 'You can close this page.' : 'The request has been queued for confirmation. We will confirm with the guest soon.'}</p>
+        <div class="details">
+            <div class="detail-row"><span class="label">Guest:</span><span>${escapeHtml(safeFormData.name)}</span></div>
+            <div class="detail-row"><span class="label">Date:</span><span>${escapeHtml(safeFormData.date)}</span></div>
+            <div class="detail-row"><span class="label">Time:</span><span>${escapeHtml(safeFormData.time)}</span></div>
+            <div class="detail-row"><span class="label">Guests:</span><span>${escapeHtml(safeFormData.guests)}</span></div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+// Kept for sending confirmation email when admin approves (from CRM API)
+export const customerConfirmationEmailTemplate = (formData: {
     name: string;
     email: string;
     phone: string;
@@ -87,36 +119,6 @@ const customerConfirmationEmailTemplate = (formData: {
 </body>
 </html>
     `;
-};
-
-// Email configuration
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const IS_SMTP_CONFIGURED = Boolean(SMTP_USER && SMTP_PASS);
-
-const createTransporter = () => {
-    if (!IS_SMTP_CONFIGURED) {
-        console.warn(
-            '[reservation-confirm] SMTP credentials missing. Using Nodemailer JSON transport. ' +
-            'Set SMTP_USER/SMTP_PASS to send real emails.'
-        );
-
-        return nodemailer.createTransport({
-            jsonTransport: true,
-        });
-    }
-
-    return nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: SMTP_PORT,
-        secure: SMTP_PORT === 465,
-        auth: {
-            user: SMTP_USER,
-            pass: SMTP_PASS,
-        },
-    });
 };
 
 export async function GET(request: NextRequest) {
@@ -225,125 +227,32 @@ export async function GET(request: NextRequest) {
             ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
         };
 
-        // Create transporter for sending emails
-        const transporter = createTransporter();
-
-        // Generate HTML confirmation email for customer
-        const htmlEmail = customerConfirmationEmailTemplate(safeFormData);
-
-        // Send confirmation email to customer
-        const mailOptions = {
-            from: SMTP_USER
-                ? `"Terracotta Restaurant" <${SMTP_USER}>`
-                : '"Terracotta Restaurant" <no-reply@terracotta.local>',
-            to: safeFormData.email,
-            subject: `Reservation Confirmed - ${safeFormData.date} at ${safeFormData.time}`,
-            html: htmlEmail,
-            text: `
-Booking confirmed!
-
-Hi ${safeFormData.name},
-
-Your table at Terracotta is confirmed for ${safeFormData.date} at ${safeFormData.time} (${safeFormData.guests} guests).
-${safeFormData.specialRequests ? `Notes: ${safeFormData.specialRequests}` : ''}
-
-Reply to this email if you need anything. See you soon!
-            `.trim(),
-        };
-
-        const info = await transporter.sendMail(mailOptions);
-
-        if (!IS_SMTP_CONFIGURED) {
-            console.info('[reservation-confirm] Customer email captured (not sent). Preview JSON payload:\n', info.messageId);
+        const id = confirmationId(token);
+        const inQueue = listQueue().some((e) => e.id === id);
+        const inReservations = getAllReservations().some((r) => r.id === id);
+        if (inQueue || inReservations) {
+            return new NextResponse(successPage('Already processed', safeFormData), {
+                status: 200,
+                headers: { 'Content-Type': 'text/html' },
+            });
         }
 
-        // Return success page
-        return new NextResponse(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Reservation Confirmed</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        text-align: center;
-                        padding: 50px;
-                        background-color: #f4f4f4;
-                    }
-                    .container {
-                        max-width: 600px;
-                        margin: 0 auto;
-                        background: white;
-                        padding: 40px;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    }
-                    .success {
-                        color: #16a34a;
-                        font-size: 48px;
-                        margin-bottom: 20px;
-                    }
-                    h1 {
-                        color: #16a34a;
-                        margin-bottom: 20px;
-                    }
-                    .details {
-                        text-align: left;
-                        background: #f9f9f9;
-                        padding: 20px;
-                        border-radius: 8px;
-                        margin: 20px 0;
-                    }
-                    .detail-row {
-                        padding: 8px 0;
-                        border-bottom: 1px solid #e5e5e5;
-                    }
-                    .detail-row:last-child {
-                        border-bottom: none;
-                    }
-                    .label {
-                        font-weight: bold;
-                        color: #16a34a;
-                        display: inline-block;
-                        width: 120px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="success">✓</div>
-                    <h1>Reservation Confirmed!</h1>
-                    <p>A confirmation email has been sent to <strong>${escapeHtml(safeFormData.email)}</strong></p>
-                    
-                    <div class="details">
-                        <div class="detail-row">
-                            <span class="label">Guest:</span>
-                            <span>${escapeHtml(safeFormData.name)}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Date:</span>
-                            <span>${escapeHtml(safeFormData.date)}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Time:</span>
-                            <span>${escapeHtml(safeFormData.time)}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Guests:</span>
-                            <span>${escapeHtml(safeFormData.guests)}</span>
-                        </div>
-                    </div>
-                    
-                    <p style="color: #666; margin-top: 30px;">
-                        The customer has been notified via email. You can close this page.
-                    </p>
-                </div>
-            </body>
-            </html>
-        `, {
-            status: 200,
-            headers: { 'Content-Type': 'text/html' },
+        const { added } = addToQueue({
+            id,
+            name: safeFormData.name,
+            email: safeFormData.email,
+            phone: safeFormData.phone,
+            date: safeFormData.date,
+            time: safeFormData.time,
+            guests: safeFormData.guests,
+            notes: safeFormData.specialRequests,
+            addedAt: new Date().toISOString(),
         });
+
+        return new NextResponse(
+            successPage(added ? 'Request received' : 'Already processed', safeFormData),
+            { status: 200, headers: { 'Content-Type': 'text/html' } }
+        );
     } catch (error) {
         console.error('Error confirming reservation:', error);
         return new NextResponse(`
