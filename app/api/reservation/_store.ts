@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { getRetentionCutoffDate, getRetentionCutoffMs } from './_retention';
 
 const MAX_PER_SLOT = 5;
 
@@ -41,7 +42,11 @@ function readAll(): ReservationRecord[] {
         if (!existsSync(path)) return [];
         const raw = readFileSync(path, 'utf-8');
         const data = JSON.parse(raw);
-        return Array.isArray(data) ? data : [];
+        const list = Array.isArray(data) ? data : [];
+        const cutoff = getRetentionCutoffDate();
+        const kept = list.filter((r) => r.date >= cutoff);
+        if (kept.length < list.length) writeAll(kept);
+        return kept;
     } catch {
         return [];
     }
@@ -60,7 +65,11 @@ function readCancellations(): ReservationCancellationRecord[] {
         if (!existsSync(path)) return [];
         const raw = readFileSync(path, 'utf-8');
         const data = JSON.parse(raw);
-        return Array.isArray(data) ? data : [];
+        const list = Array.isArray(data) ? data : [];
+        const cutoffMs = getRetentionCutoffMs();
+        const kept = list.filter((r) => new Date(r.cancelledAt).getTime() >= cutoffMs);
+        if (kept.length < list.length) writeCancellations(kept);
+        return kept;
     } catch {
         return [];
     }

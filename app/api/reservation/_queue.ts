@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { getRetentionCutoffMs } from './_retention';
 
 export type QueueEntry = {
     id: string;
@@ -23,7 +24,11 @@ function readQueue(): QueueEntry[] {
         if (!existsSync(path)) return [];
         const raw = readFileSync(path, 'utf-8');
         const data = JSON.parse(raw);
-        return Array.isArray(data) ? data : [];
+        const list = Array.isArray(data) ? data : [];
+        const cutoffMs = getRetentionCutoffMs();
+        const kept = list.filter((e) => new Date(e.addedAt).getTime() >= cutoffMs);
+        if (kept.length < list.length) writeQueue(kept);
+        return kept;
     } catch {
         return [];
     }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getQueueEntryById, removeFromQueue } from '../_queue';
 import { sendRejectionEmail } from '../sendConfirmationEmail';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -21,15 +21,17 @@ export async function GET(request: NextRequest) {
     const removed = removeFromQueue(queueId);
 
     if (entry) {
-        try {
-            const formUrl = `${BASE_URL}/#form`;
-            await sendRejectionEmail({
-                name: entry.name,
-                email: entry.email,
-                formUrl,
-            });
-        } catch (err) {
-            console.error('[reservation/reject] Send rejection email failed:', err);
+        if (BASE_URL) {
+            try {
+                const formUrl = `${BASE_URL}/#form`;
+                await sendRejectionEmail({
+                    name: entry.name,
+                    email: entry.email,
+                    formUrl,
+                });
+            } catch (err) {
+                console.error('[reservation/reject] Send rejection email failed:', err);
+            }
         }
     }
 

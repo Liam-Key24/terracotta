@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { getRetentionCutoffMs } from './_retention';
 
 const EXPIRY_DAYS = 7;
 
@@ -27,7 +28,11 @@ function readAlternatives(): AlternativeEntry[] {
         if (!existsSync(path)) return [];
         const raw = readFileSync(path, 'utf-8');
         const data = JSON.parse(raw);
-        return Array.isArray(data) ? data : [];
+        const list = Array.isArray(data) ? data : [];
+        const cutoffMs = getRetentionCutoffMs();
+        const kept = list.filter((e) => new Date(e.createdAt).getTime() >= cutoffMs);
+        if (kept.length < list.length) writeAlternatives(kept);
+        return kept;
     } catch {
         return [];
     }

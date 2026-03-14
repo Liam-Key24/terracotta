@@ -3,6 +3,7 @@ import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValid
 import { addReservation, confirmationId, getAllReservations } from '../_store';
 import { addToQueue, getQueueEntryById, listQueue, removeFromQueue } from '../_queue';
 import { sendConfirmationEmail } from '../sendConfirmationEmail';
+import { verifyConfirmationToken } from '../_confirmToken';
 
 const successPage = (message: string, safeFormData: { name: string; date: string; time: string; guests: string; email: string }) =>
     `<!DOCTYPE html>
@@ -34,81 +35,6 @@ const successPage = (message: string, safeFormData: { name: string; date: string
     </div>
 </body>
 </html>`;
-
-// Phosphor-style CheckCircle icon (inline SVG for email – circle + check)
-const checkCircleIcon = (size?: number) => {
-    const s = size ?? 56;
-    return `<svg width="${s}" height="${s}" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;vertical-align:middle;">
-  <circle cx="128" cy="128" r="112" fill="#631732"/>
-  <path d="M72 128 L112 168 L184 96" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-</svg>`;
-};
-const checkCircleIconSmall = () => checkCircleIcon(28);
-
-// Kept for sending confirmation email when admin approves (from CRM API or email Confirm button)
-export const customerConfirmationEmailTemplate = (formData: {
-    name: string;
-    email: string;
-    phone: string;
-    date: string;
-    time: string;
-    guests: string;
-    specialRequests?: string;
-}) => {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table booked</title>
-    <style>
-        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 24px; background-color: #f5f5f5; }
-        .email-wrapper { max-width: 480px; margin: 0 auto; }
-        .card { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #631732; }
-        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 20px 24px; text-align: center; }
-        .header-table { margin: 0 auto; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
-        .header-icon-cell { padding-right: 12px; vertical-align: middle; }
-        .content { padding: 24px 24px 28px; }
-        .intro { font-size: 18px; color: #333; margin: 0 0 20px 0; }
-        .details-card { background: #fafafa; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-        .detail-row { padding: 8px 0; font-size: 16px; }
-        .detail-row:first-child { padding-top: 0; }
-        .detail-row:last-child { padding-bottom: 0; }
-        .detail-row strong { color: #631732; }
-        .closing { font-size: 15px; color: #555; margin: 0 0 8px 0; }
-        .footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; color: #666; font-size: 14px; }
-    </style>
-</head>
-<body>
-    <div class="email-wrapper">
-        <div class="card">
-            <div class="header">
-                <table class="header-table" role="presentation" cellpadding="0" cellspacing="0" align="center">
-                    <tr>
-                        <td class="header-icon-cell">${checkCircleIconSmall()}</td>
-                        <td><h1>Table booked</h1></td>
-                    </tr>
-                </table>
-            </div>
-            <div class="content">
-                <p class="intro">Hi ${escapeHtml(formData.name)}, your table at Terracotta is confirmed. We're excited to host you!</p>
-                <div class="details-card">
-                    <div class="detail-row"><strong>Date:</strong> ${escapeHtml(formData.date)}</div>
-                    <div class="detail-row"><strong>Time:</strong> ${escapeHtml(formData.time)}</div>
-                    <div class="detail-row"><strong>Guests:</strong> ${escapeHtml(formData.guests)}</div>
-                    ${formData.specialRequests ? `<div class="detail-row"><strong>Notes:</strong> ${escapeHtmlWithBreaks(formData.specialRequests)}</div>` : ''}
-                </div>
-                <p class="closing">If you need to adjust anything, just reply to this email. See you soon!</p>
-                <div class="footer">— Terracotta Team</div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-    `;
-};
 
 const approveSuccessPage = (safeFormData: { name: string; date: string; time: string; guests: string; email: string }, crmUrl: string) =>
     `<!DOCTYPE html>
@@ -170,12 +96,8 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Decode the reservation data from token
-        let formData;
-        try {
-            const decoded = Buffer.from(decodeURIComponent(token), 'base64').toString('utf-8');
-            formData = JSON.parse(decoded);
-        } catch {
+        const formData = verifyConfirmationToken(token);
+        if (!formData || typeof formData !== 'object') {
             return new NextResponse(`
                 <!DOCTYPE html>
                 <html>
@@ -190,16 +112,11 @@ export async function GET(request: NextRequest) {
                     <h1 class="error">Invalid confirmation token</h1>
                     <p>The confirmation token is invalid or corrupted.</p>
                 </body>
-                </html>
+            </html>
             `, {
                 status: 400,
                 headers: { 'Content-Type': 'text/html' },
             });
-        }
-
-        // Validate required fields
-        if (!formData || typeof formData !== 'object') {
-            throw new Error('Invalid token payload');
         }
 
         const raw = formData as Record<string, unknown>;

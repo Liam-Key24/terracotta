@@ -58,9 +58,6 @@ export default function Form(){
             guests: formData.guests,
             specialRequests: formData.specialRequests
         };
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'formlayout.tsx:client-pre-fetch',message:'payload before POST',data:{time:payload.time,location:payload.location,date:payload.date,hasTime:!!payload.time,hasLocation:!!payload.location},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
 
         try {
             const response = await fetch('/api/reservation', {
@@ -71,10 +68,7 @@ export default function Form(){
                 body: JSON.stringify(payload),
             });
 
-            // #region agent log
             const errBody = await response.json().catch(() => ({}));
-            fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'formlayout.tsx:client-after-response',message:'response received',data:{ok:response.ok,status:response.status,errorFromBody:errBody?.error},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
 
             if (response.ok) {
                 setSubmitStatus('success');

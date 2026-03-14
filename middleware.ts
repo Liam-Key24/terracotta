@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const COOKIE_NAME = 'crm_session';
-const SECRET = process.env.CRM_SECRET || process.env.ADMIN_SECRET || 'terracotta-crm-secret-change-me';
+const SECRET = process.env.CRM_SECRET ?? process.env.ADMIN_SECRET ?? '';
 
 async function verifyCookie(value: string): Promise<{ role: string } | null> {
     if (!value || !value.includes('.')) return null;

@@ -1,7 +1,6 @@
 "use client";
 
 import HeroLanding from "./components/heroLanding";
-import OpenSection from "./layout/openNowSection";
 import Form from "./form/formlayout";
 import PictureComponent from "./components/pictureComponent";
 export default function Home() {

@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../_utils';
+import { checkRateLimit } from '../_rateLimit';
 import { addToQueue, countQueueForSlot } from './_queue';
 import { sendSlotFullEmail } from './sendConfirmationEmail';
+import { signConfirmationToken } from './_confirmToken';
 import { countForSlot } from './_store';
 
 // HTML Email Template for Owner
@@ -233,12 +235,11 @@ const reservationEmailTemplate = (formData: {
     `;
 };
 
-// Email configuration - these should be set as environment variables
-const OWNER_EMAIL = process.env.OWNER_EMAIL || 'reservations@terracotta-acton.com';
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
+const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
+const SMTP_HOST = process.env.SMTP_HOST ?? 'smtp.gmail.com';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '587', 10);
+const SMTP_USER = process.env.SMTP_USER ?? '';
+const SMTP_PASS = process.env.SMTP_PASS ?? '';
 const IS_SMTP_CONFIGURED = Boolean(SMTP_USER && SMTP_PASS);
 
 const createTransporter = () => {
@@ -256,7 +257,7 @@ const createTransporter = () => {
     return nodemailer.createTransport({
         host: SMTP_HOST,
         port: SMTP_PORT,
-        secure: SMTP_PORT === 465, // true for 465, false for other ports
+        secure: SMTP_PORT === 465,
         auth: {
             user: SMTP_USER,
             pass: SMTP_PASS,
@@ -266,6 +267,13 @@ const createTransporter = () => {
 
 export async function POST(request: NextRequest) {
     try {
+        const limit = checkRateLimit(request);
+        if (!limit.ok) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again in a minute.' },
+                { status: limit.status }
+            );
+        }
         let body: unknown;
         try {
             body = await request.json();
@@ -286,10 +294,6 @@ export async function POST(request: NextRequest) {
         const guests = asTrimmedString(raw.guests);
         const specialRequestsRaw = asTrimmedString(raw.specialRequests);
 
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:after-parse',message:'body parsed',data:{hasTime:!!time,hasLocation:!!location,timeLen:time?.length ?? 0},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
-
         // Validate required fields
         if (!name || !email || !phone || !date || !time || !location || !guests) {
             return NextResponse.json(
@@ -303,10 +307,6 @@ export async function POST(request: NextRequest) {
         if (!/^\d+$/.test(guests) || Number(guests) < 1 || Number(guests) > 20) {
             return NextResponse.json({ error: 'Invalid guests' }, { status: 400 });
         }
-
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:after-validation',message:'validation passed',data:{},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
 
         const formData = {
             name: clampLength(name, 100),
@@ -324,12 +324,10 @@ export async function POST(request: NextRequest) {
         const confirmedCount = countForSlot(formData.date, formData.time);
         const queueCount = countQueueForSlot(formData.date, formData.time);
         if (confirmedCount + queueCount >= MAX_PER_SLOT) {
-            const origin = request.headers.get('origin') || '';
-            const allowedOrigins = new Set(['http://localhost:3000', 'https://terracotta-acton.com']);
-            const baseUrl =
-                process.env.NEXT_PUBLIC_BASE_URL ||
-                (allowedOrigins.has(origin) ? origin : '') ||
-                'http://localhost:3000';
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? '';
+            if (!baseUrl) {
+                return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
+            }
             const formUrl = `${baseUrl}/#form`;
             try {
                 await sendSlotFullEmail({
@@ -368,23 +366,24 @@ export async function POST(request: NextRequest) {
         // Create transporter for sending emails
         const transporter = createTransporter();
 
-        // Generate confirmation token (form data + queueId for approve-from-email flow)
-        const confirmationToken = Buffer.from(JSON.stringify({ ...formData, queueId })).toString('base64');
-        
-        // Get base URL for confirmation link
-        const origin = request.headers.get('origin') || '';
-        const allowedOrigins = new Set(['http://localhost:3000', 'https://terracotta-acton.com']);
-        const baseUrl =
-            process.env.NEXT_PUBLIC_BASE_URL ||
-            (allowedOrigins.has(origin) ? origin : '') ||
-            'http://localhost:3000';
+        const payload = { ...formData, queueId };
+        const confirmationToken = signConfirmationToken(payload);
+        if (!confirmationToken) {
+            return NextResponse.json(
+                { error: 'Server configuration error' },
+                { status: 503 }
+            );
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? '';
+        if (!baseUrl || !OWNER_EMAIL) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
+        }
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
         const rejectUrl = `${baseUrl}/api/reservation/reject?queueId=${encodeURIComponent(queueId)}`;
 
-        // Generate HTML email using the template
         const htmlEmail = reservationEmailTemplate(formData, confirmationUrl, rejectUrl);
 
-        // Send email to restaurant owner
         const mailOptions = {
             from: SMTP_USER
                 ? `"Terracotta Reservations" <${SMTP_USER}>`
@@ -410,10 +409,6 @@ Please confirm this reservation with the guest as soon as possible.
             `.trim(),
         };
 
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:before-sendMail',message:'about to sendMail',data:{},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
-
         let info: { messageId?: string };
         try {
             info = await transporter.sendMail(mailOptions);
@@ -438,11 +433,6 @@ Please confirm this reservation with the guest as soon as possible.
             { status: 200 }
         );
     } catch (error) {
-        // #region agent log
-        const errMsg = error instanceof Error ? error.message : String(error);
-        const errName = error instanceof Error ? error.name : '';
-        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:catch',message:'server exception',data:{errorMessage:errMsg,errorName:errName},timestamp:Date.now(),hypothesisId:'H2,H4,H5'})}).catch(()=>{});
-        // #endregion
         console.error('Error processing reservation:', error);
         return NextResponse.json(
             { error: 'Failed to process reservation' },
@@ -451,7 +441,6 @@ Please confirm this reservation with the guest as soon as possible.
     }
 }
 
-// GET endpoint (optional - for testing or retrieving reservations)
 export async function GET() {
     return NextResponse.json(
         { message: 'Reservation API endpoint. Use POST to submit a reservation.' },

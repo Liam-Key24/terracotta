@@ -1,12 +1,13 @@
 import { createHmac } from 'node:crypto';
 
 const COOKIE_NAME = 'crm_session';
-const SECRET = process.env.CRM_SECRET || process.env.ADMIN_SECRET || 'terracotta-crm-secret-change-me';
+const SECRET = process.env.CRM_SECRET ?? process.env.ADMIN_SECRET ?? '';
 const EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export type Role = 'admin' | 'developer';
 
-export function signCookie(role: Role): string {
+export function signCookie(role: Role): string | null {
+    if (!SECRET) return null;
     const exp = Date.now() + EXPIRY_MS;
     const payload = JSON.stringify({ role, exp });
     const payloadB64 = Buffer.from(payload, 'utf-8').toString('base64url');
@@ -15,7 +16,7 @@ export function signCookie(role: Role): string {
 }
 
 export function verifyCookie(value: string): { role: Role; exp: number } | null {
-    if (!value || !value.includes('.')) return null;
+    if (!SECRET || !value || !value.includes('.')) return null;
     const [payloadB64, sig] = value.split('.');
     const expectedSig = createHmac('sha256', SECRET).update(payloadB64).digest('base64url');
     if (sig !== expectedSig) return null;

@@ -6,10 +6,10 @@ import { getCrmSession } from '../../requireAuth';
 import { getAllReservations, listReservationCancellations } from '../../../reservation/_store';
 import { listQueue } from '../../../reservation/_queue';
 
-const REVEAL_SECRET = process.env.CRM_SECRET || process.env.ADMIN_SECRET || 'terracotta-crm-secret-change-me';
+const REVEAL_SECRET = process.env.CRM_SECRET || process.env.ADMIN_SECRET || '';
 
 function verifyRevealToken(token: string): boolean {
-    if (!token || !token.includes('.')) return false;
+    if (!REVEAL_SECRET || !token || !token.includes('.')) return false;
     const [payloadB64, sig] = token.split('.');
     const expectedSig = createHmac('sha256', REVEAL_SECRET).update(payloadB64).digest('base64url');
     if (sig !== expectedSig) return false;

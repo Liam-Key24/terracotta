@@ -5,8 +5,8 @@ import { addReservation } from '../../reservation/_store';
 import { createAlternative } from '../../reservation/_alternatives';
 import { sendAlternativeOfferEmail, sendConfirmationEmail } from '../../reservation/sendConfirmationEmail';
 
-const OWNER_EMAIL = process.env.OWNER_EMAIL || 'reservations@terracotta-acton.com';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
 export async function GET(request: NextRequest) {
     const auth = requireCrm(request);
@@ -87,6 +87,9 @@ export async function POST(request: NextRequest) {
             suggestedTableIds: suggestedTableIds?.length ? suggestedTableIds : undefined,
         });
         removeFromQueue(entry.id);
+        if (!BASE_URL) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
+        }
         const confirmUrl = `${BASE_URL}/reservation/confirm-alternative?token=${encodeURIComponent(token)}`;
         try {
             await sendAlternativeOfferEmail({

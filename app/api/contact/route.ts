@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../_utils';
+import { checkRateLimit } from '../_rateLimit';
 
 // HTML Email Template for Contact Form
 const contactEmailTemplate = (formData: {
@@ -118,12 +119,11 @@ const contactEmailTemplate = (formData: {
     `;
 };
 
-// Email configuration
-const OWNER_EMAIL = process.env.OWNER_EMAIL || 'reservations@terracotta-acton.com';
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
+const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
+const SMTP_HOST = process.env.SMTP_HOST ?? 'smtp.gmail.com';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '587', 10);
+const SMTP_USER = process.env.SMTP_USER ?? '';
+const SMTP_PASS = process.env.SMTP_PASS ?? '';
 const IS_SMTP_CONFIGURED = Boolean(SMTP_USER && SMTP_PASS);
 
 const createTransporter = () => {
@@ -151,6 +151,13 @@ const createTransporter = () => {
 
 export async function POST(request: NextRequest) {
     try {
+        const limit = checkRateLimit(request);
+        if (!limit.ok) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again in a minute.' },
+                { status: limit.status }
+            );
+        }
         let body: unknown;
         try {
             body = await request.json();
@@ -186,7 +193,9 @@ export async function POST(request: NextRequest) {
             message: clampLength(message, 5000),
         };
 
-        // Create transporter for sending emails
+        if (!OWNER_EMAIL) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
+        }
         const transporter = createTransporter();
 
         // Generate HTML email using the template
@@ -236,7 +245,6 @@ You can reply directly to this email to respond to ${formData.name}.
     }
 }
 
-// GET endpoint (optional - for testing)
 export async function GET() {
     return NextResponse.json(
         { message: 'Contact API endpoint. Use POST to submit a contact form.' },
