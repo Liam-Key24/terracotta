@@ -9,6 +9,29 @@ import {
     RESERVATION_CARD_HEIGHT_MOBILE,
     TIME_COLUMN_HOURS,
 } from './constants';
+
+/** Pixel offset from top of hour rows for current time (10–22). Returns 0 if before 10am, max if after 10pm. */
+export function getNowLineOffset(
+    now: Date,
+    hourRowHeights: Record<number, number>
+): number {
+    const hour = now.getHours();
+    const min = now.getMinutes();
+    if (hour < TIME_COLUMN_HOURS[0]) return 0;
+    if (hour > TIME_COLUMN_HOURS[TIME_COLUMN_HOURS.length - 1]) {
+        return TIME_COLUMN_HOURS.reduce((sum, h) => sum + (hourRowHeights[h] ?? 0), 0);
+    }
+    let offset = 0;
+    for (const h of TIME_COLUMN_HOURS) {
+        if (h < hour) {
+            offset += hourRowHeights[h] ?? 0;
+        } else if (h === hour) {
+            offset += ((hourRowHeights[h] ?? 0) * (min / 60));
+            break;
+        } else break;
+    }
+    return offset;
+}
 import type { DayReservation, Reservation } from './types';
 
 export function formatHourAmPm(hour24: number): string {

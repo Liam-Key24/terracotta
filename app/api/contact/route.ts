@@ -119,7 +119,7 @@ const contactEmailTemplate = (formData: {
 };
 
 // Email configuration
-const OWNER_EMAIL = process.env.OWNER_EMAIL || 'owner@terracotta.com';
+const OWNER_EMAIL = process.env.OWNER_EMAIL || 'reservations@terracotta-acton.com';
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER || '';

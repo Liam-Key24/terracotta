@@ -1,12 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { DAY_COL_WIDTH, HEADER_HEIGHT, TIME_COLUMN_HOURS } from '../constants';
 import type { DayReservation, Reservation } from '../types';
 import { ReservationCard } from './ReservationCard';
+
+function getNowMinutes(): number {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
+}
 
 type DayColumnProps = {
     date: string;
     dayReservations: DayReservation[];
     isToday: boolean;
+    todayIso: string;
     hourRowHeights: Record<number, number>;
     onSelectReservation: (reservation: Reservation | null) => void;
     dayColWidth?: number;
@@ -18,6 +24,7 @@ export function DayColumn({
     date,
     dayReservations,
     isToday,
+    todayIso,
     hourRowHeights,
     onSelectReservation,
     dayColWidth = DAY_COL_WIDTH,
@@ -32,6 +39,13 @@ export function DayColumn({
             month: d.toLocaleDateString('en-GB', { month: 'short' }),
         };
     })();
+
+    const [nowMinutes, setNowMinutes] = useState(getNowMinutes);
+    useEffect(() => {
+        if (!isToday) return;
+        const t = setInterval(() => setNowMinutes(getNowMinutes()), 60 * 1000);
+        return () => clearInterval(t);
+    }, [isToday]);
 
     const reservationsByHour = useMemo(() => {
         const byHour: Record<number, DayReservation[]> = {};
@@ -101,6 +115,7 @@ export function DayColumn({
                                 reservation={reservation}
                                 onClick={() => onSelectReservation(reservation)}
                                 compact={compact}
+                                isPast={date < todayIso || (isToday && nowMinutes >= reservation.endMin)}
                             />
                         ))}
                     </div>

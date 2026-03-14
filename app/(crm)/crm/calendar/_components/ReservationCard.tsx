@@ -6,10 +6,13 @@ type ReservationCardProps = {
     reservation: DayReservation;
     onClick: () => void;
     compact?: boolean;
+    isPast?: boolean;
 };
 
-export function ReservationCard({ reservation, onClick, compact = false }: ReservationCardProps) {
-    const tone = getReservationTone(reservation.guests);
+export function ReservationCard({ reservation, onClick, compact = false, isPast = false }: ReservationCardProps) {
+    const tone = isPast
+        ? { container: 'bg-slate-100 border-slate-200 text-slate-600', meta: 'text-slate-500' }
+        : getReservationTone(reservation.guests);
     const label = formatTimeRange24hLabel(reservation.startMin, reservation.endMin);
 
     return (

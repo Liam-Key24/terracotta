@@ -10,7 +10,7 @@ import { ReservationDetailsDrawer } from './_components/ReservationDetailsDrawer
 import { TimeColumn } from './_components/TimeColumn';
 import { DAY_COL_WIDTH, HEADER_HEIGHT, HEADER_HEIGHT_MOBILE } from './constants';
 import type { Reservation, ReservationCreateInput, Table } from './types';
-import { addDays, buildCalendarData, getHeaderDateLabel, getMonday } from './utils';
+import { addDays, buildCalendarData, getHeaderDateLabel, getMonday, getNowLineOffset } from './utils';
 
 const TIME_COL_WIDTH_MOBILE = 52;
 const TIME_COL_WIDTH_DESKTOP = 80;
@@ -71,6 +71,13 @@ export default function CrmCalendarPage() {
 
     const todayIso = new Date().toISOString().slice(0, 10);
     const headerDateLabel = useMemo(() => getHeaderDateLabel(startDate), [startDate]);
+    const showNowLine = displayDates.includes(todayIso);
+    const [now, setNow] = useState(() => new Date());
+    useEffect(() => {
+        if (!showNowLine) return;
+        const t = setInterval(() => setNow(new Date()), 60 * 1000);
+        return () => clearInterval(t);
+    }, [showNowLine]);
 
     async function addBooking(data: ReservationCreateInput) {
         const response = await fetch('/api/crm/reservations', {
@@ -105,8 +112,8 @@ export default function CrmCalendarPage() {
                 onOpenAddBooking={() => setAddOpen(true)}
             />
 
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-white">
-                <div className="flex shrink-0 items-start" style={{ minWidth: calendarMinWidth }}>
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-white relative">
+                <div className="relative flex shrink-0 items-start" style={{ minWidth: calendarMinWidth }}>
                     <TimeColumn hourRowHeights={hourRowHeights} width={timeColWidth} headerHeight={headerHeight} />
                     {displayDates.map((date) => (
                         <DayColumn
@@ -114,6 +121,7 @@ export default function CrmCalendarPage() {
                             date={date}
                             dayReservations={reservationsByDate[date] ?? []}
                             isToday={date === todayIso}
+                            todayIso={todayIso}
                             hourRowHeights={hourRowHeights}
                             onSelectReservation={setSelected}
                             dayColWidth={dayColWidth}
@@ -121,6 +129,17 @@ export default function CrmCalendarPage() {
                             compact={!isDesktop}
                         />
                     ))}
+                    {showNowLine && (
+                        <div
+                            className="absolute z-20 h-0.5 bg-red-500 pointer-events-none"
+                            style={{
+                                left: timeColWidth,
+                                width: dayColWidth * displayDates.length,
+                                top: headerHeight + getNowLineOffset(now, hourRowHeights),
+                            }}
+                            aria-hidden
+                        />
+                    )}
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { TableReservationPopup } from './TableReservationPopup';
 import { SLOTS_30 } from '../constants';
@@ -29,11 +29,14 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+    const [selectedDate, setSelectedDate] = useState(date);
     const [time, setTime] = useState('18:00');
     const [guests, setGuests] = useState('2');
     const [notes, setNotes] = useState('');
     const [tableIds, setTableIds] = useState<string[]>([]);
     const [previewTableId, setPreviewTableId] = useState<string | null>(null);
+
+    useEffect(() => setSelectedDate(date), [date]);
 
     const previewTable = useMemo(
         () => (previewTableId ? tables.find((table) => table.id === previewTableId) ?? null : null),
@@ -61,7 +64,7 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
             name,
             email,
             phone,
-            date,
+            date: selectedDate,
             time,
             guests,
             notes: notes.trim() || undefined,
@@ -76,19 +79,10 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="px-6 py-5 border-b border-slate-200 flex items-start justify-between gap-3">
-                    <div>
-                        <h3 className="text-2xl font-semibold text-slate-900 inline-flex items-center gap-2">
-                            <PlusIcon size={18} weight="bold" className="text-[#631732]" />
-                            Add booking
-                        </h3>
-                        <p className="mt-1 text-sm text-slate-500 inline-flex items-center gap-2 flex-wrap">
-                            <CalendarBlankIcon size={14} />
-                            {date}
-                            <span className="text-slate-300">•</span>
-                            <ClockIcon size={14} />
-                            {timeLabel}
-                        </p>
-                    </div>
+                    <h3 className="text-2xl font-semibold text-slate-900 inline-flex items-center gap-2">
+                        <PlusIcon size={18} weight="bold" className="text-[#631732]" />
+                        Add booking
+                    </h3>
                     <button
                         type="button"
                         onClick={onClose}
@@ -148,13 +142,14 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
                         <div className="rounded-2xl bg-slate-100 px-4 py-3">
                             <label className="text-sm font-medium text-slate-600 inline-flex items-center gap-1.5">
                                 <CalendarBlankIcon size={14} />
-                                Date
+                                Date *
                             </label>
                             <input
                                 type="date"
-                                value={date}
-                                readOnly
-                                className="mt-1.5 w-full bg-transparent text-slate-900 outline-none cursor-default"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="mt-1.5 w-full bg-transparent text-slate-900 outline-none"
+                                required
                             />
                         </div>
 
