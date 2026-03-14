@@ -94,6 +94,59 @@ export async function sendRejectionEmail(params: { name: string; email: string; 
     });
 }
 
+function slotFullEmailHtml(name: string, date: string, time: string, formUrl: string): string {
+    const escapedName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedDate = date.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedTime = time.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedUrl = formUrl.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking not available</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 24px; background-color: #f5f5f5; }
+        .email-wrapper { max-width: 400px; margin: 0 auto; }
+        .card { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 24px 24px 28px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+        .content { padding: 28px 24px 32px; }
+        .message { font-size: 17px; margin: 0 0 20px; color: #333; }
+        .btn { display: inline-block; background: #631732; color: #ffffff !important; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-top: 8px; }
+        .footer { margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px; }
+        a { color: #631732; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="card">
+            <div class="header"><h1>Booking not available</h1></div>
+            <div class="content">
+                <p class="message">Hi ${escapedName},</p>
+                <p class="message">This date and time is fully booked. Please choose another time.</p>
+                <p class="message"><a href="${escapedUrl}" class="btn" style="color:#ffffff !important; text-decoration:none;">Go to website</a></p>
+                <div class="footer">— Terracotta Team</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+export async function sendSlotFullEmail(params: { name: string; email: string; date: string; time: string; formUrl: string }): Promise<void> {
+    if (MOCK_NO_EMAIL) return;
+    const transporter = createTransporter();
+    await transporter.sendMail({
+        from: SMTP_USER ? `"Terracotta Restaurant" <${SMTP_USER}>` : '"Terracotta" <noreply@local>',
+        to: params.email,
+        subject: `Booking not available — ${params.date} at ${params.time} is fully booked`,
+        html: slotFullEmailHtml(params.name, params.date, params.time, params.formUrl),
+        text: `Hi ${params.name}, this date and time is fully booked. Please choose another time. ${params.formUrl}`,
+    });
+}
+
 function alternativeOfferEmailHtml(name: string, suggestedDate: string, suggestedTime: string, confirmUrl: string): string {
     const escapedName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const escapedDate = suggestedDate.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

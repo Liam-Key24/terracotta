@@ -2,6 +2,17 @@
 
 import { useState } from 'react'
 
+// 6pm–9pm in 30 min intervals (value: 24h, label: 12h am/pm)
+const FORM_TIME_OPTIONS = [
+    { value: '18:00', label: '6:00 pm' },
+    { value: '18:30', label: '6:30 pm' },
+    { value: '19:00', label: '7:00 pm' },
+    { value: '19:30', label: '7:30 pm' },
+    { value: '20:00', label: '8:00 pm' },
+    { value: '20:30', label: '8:30 pm' },
+    { value: '21:00', label: '9:00 pm' },
+]
+
 export default function Form(){
     const [formData, setFormData] = useState({
         name: '',
@@ -199,9 +210,9 @@ export default function Form(){
                                     className="w-full px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                                 >
                                     <option value="">Select time</option>
-                                    <option value="6pm-7:30pm">6pm-7:30pm</option>
-                                    <option value="7:30pm-9pm">7:30pm-9pm</option>
-                                    <option value="9pm">9pm</option>
+                                    {FORM_TIME_OPTIONS.map(({ value, label }) => (
+                                        <option key={value} value={value}>{label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
@@ -216,9 +227,9 @@ export default function Form(){
                                     className="w-full px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                                 >
                                     <option value="">Select time</option>
-                                    <option value="6-7:30pm">6-7:30pm</option>
-                                    <option value="7:30-9pm">7:30-9pm</option>
-                                    <option value="9pm">9pm</option>
+                                    {FORM_TIME_OPTIONS.map(({ value, label }) => (
+                                        <option key={value} value={value}>{label}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -238,6 +249,11 @@ export default function Form(){
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none resize-none"
                         placeholder="Any dietary restrictions, special occasions, or requests..."
                     />
+                    <div className="mt-3 px-4 py-3.5 rounded-xl bg-[#631732]/5 border border-[#631732]/15">
+                        <p className="text-sm text-gray-600 leading-relaxed italic">
+                            As we&apos;re a small restaurant with limited seating, we work to the following sitting times: Tables of 2 have a 1 hr 30 min turnover, Groups of 4+ have a 2 hr turnover, thank you for your understanding.
+                        </p>
+                    </div>
                 </div>
 
                 {submitStatus === 'success' && (

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../_utils';
-import { addToQueue } from './_queue';
+import { addToQueue, countQueueForSlot } from './_queue';
+import { sendSlotFullEmail } from './sendConfirmationEmail';
+import { countForSlot } from './_store';
 
 // HTML Email Template for Owner
 const reservationEmailTemplate = (formData: {
@@ -285,7 +287,7 @@ export async function POST(request: NextRequest) {
         const specialRequestsRaw = asTrimmedString(raw.specialRequests);
 
         // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:after-parse',message:'body parsed',data:{hasTime:!!time,hasLocation:!!location,timeLen:time.length},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:after-parse',message:'body parsed',data:{hasTime:!!time,hasLocation:!!location,timeLen:time?.length ?? 0},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
         // #endregion
 
         // Validate required fields
@@ -316,6 +318,35 @@ export async function POST(request: NextRequest) {
             guests,
             ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
         };
+
+        // Hard cap: max 5 bookings per date+time (confirmed + queue). 6th gets "booking not made" email.
+        const MAX_PER_SLOT = 5;
+        const confirmedCount = countForSlot(formData.date, formData.time);
+        const queueCount = countQueueForSlot(formData.date, formData.time);
+        if (confirmedCount + queueCount >= MAX_PER_SLOT) {
+            const origin = request.headers.get('origin') || '';
+            const allowedOrigins = new Set(['http://localhost:3000', 'https://terracotta-acton.com']);
+            const baseUrl =
+                process.env.NEXT_PUBLIC_BASE_URL ||
+                (allowedOrigins.has(origin) ? origin : '') ||
+                'http://localhost:3000';
+            const formUrl = `${baseUrl}/#form`;
+            try {
+                await sendSlotFullEmail({
+                    name: formData.name,
+                    email: formData.email,
+                    date: formData.date,
+                    time: formData.time ?? '',
+                    formUrl,
+                });
+            } catch (err) {
+                console.error('[reservation] Send slot-full email failed:', err);
+            }
+            return NextResponse.json(
+                { error: "This date and time is fully booked. We've emailed you — please choose another time." },
+                { status: 400 }
+            );
+        }
 
         // Add to CRM queue so it appears in the CRM for approval
         const queueId = `res-${randomUUID()}`;

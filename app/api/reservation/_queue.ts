@@ -40,6 +40,16 @@ export function listQueue(): QueueEntry[] {
     return readQueue();
 }
 
+function slotKey(date: string, time: string): string {
+    return `${String(date).trim()}|${String(time).trim()}`;
+}
+
+/** Count queue entries for the same date and time slot (for capacity limit). */
+export function countQueueForSlot(date: string, time: string): number {
+    const key = slotKey(date, time);
+    return readQueue().filter((e) => slotKey(e.date, e.time) === key).length;
+}
+
 export function addToQueue(entry: QueueEntry): { added: boolean; error?: string } {
     const queue = readQueue();
     if (queue.some((e) => e.id === entry.id)) {
