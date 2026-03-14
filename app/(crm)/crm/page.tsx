@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CodeIcon, LockIcon, UserCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 
 export default function CrmLoginPage() {
     const router = useRouter();
@@ -46,7 +47,8 @@ export default function CrmLoginPage() {
             </h1>
             <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                    <p className="text-red-600 text-sm" role="alert">
+                    <p className="text-red-600 text-sm inline-flex items-center gap-1.5" role="alert">
+                        <WarningCircleIcon size={14} weight="fill" />
                         {error}
                     </p>
                 )}
@@ -56,12 +58,16 @@ export default function CrmLoginPage() {
                         checked={isDeveloper}
                         onChange={(e) => setIsDeveloper(e.target.checked)}
                     />
+                    <CodeIcon size={14} />
                     Developer login (password only)
                 </label>
                 {!isDeveloper && (
                     <div>
                         <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">
-                            Username
+                            <span className="inline-flex items-center gap-1.5">
+                                <UserCircleIcon size={14} />
+                                Username
+                            </span>
                         </label>
                         <input
                             id="username"
@@ -76,7 +82,10 @@ export default function CrmLoginPage() {
                 )}
                 <div>
                     <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
-                        Password
+                        <span className="inline-flex items-center gap-1.5">
+                            <LockIcon size={14} />
+                            Password
+                        </span>
                     </label>
                     <input
                         id="password"
@@ -91,8 +100,9 @@ export default function CrmLoginPage() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#631732] text-white py-2.5 rounded-lg font-medium hover:bg-[#631732]/90 disabled:opacity-50"
+                    className="w-full bg-[#631732] text-white py-2.5 rounded-lg font-medium hover:bg-[#631732]/90 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
                 >
+                    <LockIcon size={14} weight="fill" />
                     {loading ? 'Signing in…' : 'Sign in'}
                 </button>
             </form>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { getIsoDateOrFallback } from '../_shared/date';
 import { AddBookingModal } from './_components/AddBookingModal';
 import { CalendarHeader } from './_components/CalendarHeader';
 import { DayColumn } from './_components/DayColumn';
@@ -18,11 +19,7 @@ export default function CrmCalendarPage() {
     const [selected, setSelected] = useState<Reservation | null>(null);
     const [addOpen, setAddOpen] = useState(false);
 
-    const globalDate = (() => {
-        const candidate = searchParams.get('date');
-        if (candidate && /^\d{4}-\d{2}-\d{2}$/.test(candidate)) return candidate;
-        return new Date().toISOString().slice(0, 10);
-    })();
+    const globalDate = getIsoDateOrFallback(searchParams.get('date'), new Date().toISOString().slice(0, 10));
     const startDate = useMemo(() => getMonday(globalDate), [globalDate]);
 
     function refetchReservations() {

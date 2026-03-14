@@ -3,39 +3,17 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-
-function toLocalIso(date: Date): string {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-}
-
-function parseIsoDate(iso: string): Date {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
-}
-
-function formatWeekRangeLabel(iso: string): string {
-    const base = parseIsoDate(iso);
-    const day = base.getDay();
-    const diffToMonday = day === 0 ? -6 : 1 - day;
-    const monday = new Date(base);
-    monday.setDate(base.getDate() + diffToMonday);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-
-    const format = (date: Date) =>
-        date
-            .toLocaleDateString('en-GB', {
-            weekday: 'short',
-            day: '2-digit',
-            month: 'short',
-            })
-            .replace(',', '');
-
-    return `${format(monday)} - ${format(sunday)}`;
-}
+import {
+    CalendarBlankIcon,
+    CalendarDotsIcon,
+    CaretLeftIcon,
+    CaretRightIcon,
+    CodeIcon,
+    RowsIcon,
+    SignOutIcon,
+    SquaresFourIcon,
+} from '@phosphor-icons/react';
+import { formatWeekRangeLabel, getIsoDateOrFallback, parseIsoDate, toLocalIso } from './crm/_shared/date';
 
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -60,18 +38,14 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     }
 
     const nav = [
-        { href: '/crm/dashboard', label: 'Dashboard' },
-        { href: '/crm/calendar', label: 'Calendar' },
-        { href: '/crm/floorplan', label: 'Floor plan' },
+        { href: '/crm/dashboard', label: 'Dashboard', icon: SquaresFourIcon },
+        { href: '/crm/calendar', label: 'Calendar', icon: CalendarDotsIcon },
+        { href: '/crm/floorplan', label: 'Floor plan', icon: RowsIcon },
     ];
-    if (role === 'developer') nav.push({ href: '/crm/developer', label: 'Developer' });
+    if (role === 'developer') nav.push({ href: '/crm/developer', label: 'Developer', icon: CodeIcon });
 
     const todayIso = toLocalIso(new Date());
-    const globalDate = (() => {
-        const candidate = searchParams.get('date');
-        if (candidate && /^\d{4}-\d{2}-\d{2}$/.test(candidate)) return candidate;
-        return todayIso;
-    })();
+    const globalDate = getIsoDateOrFallback(searchParams.get('date'), todayIso);
 
     function updateGlobalDate(nextDate: string) {
         if (!nextDate) return;
@@ -94,80 +68,112 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         return pathname === href || pathname.startsWith(`${href}/`);
     }
 
+    const navLinks = (
+        <>
+            {nav.map(({ href, label, icon: Icon }) => {
+                const active = isActive(href);
+                return (
+                    <Link
+                        key={href}
+                        href={`${href}?date=${globalDate}`}
+                        aria-label={label}
+                        title={label}
+                        className={`h-8 w-8 md:h-8 md:w-8 lg:h-9 lg:w-9 xl:w-auto xl:px-3 inline-flex items-center justify-center gap-0 xl:gap-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border shrink-0 ${
+                            active
+                                ? 'purp text-white border-transparent shadow-sm'
+                                : 'text-[#631732]/80 border-[#631732]/25 bg-[#631732]/5 hover:bg-[#631732]/10'
+                        }`}
+                    >
+                        <Icon size={14} weight={active ? 'fill' : 'regular'} />
+                        <span className="hidden 2xl:inline">{label}</span>
+                    </Link>
+                );
+            })}
+        </>
+    );
+
+    const logoutButton = (
+        <form action="/api/crm/logout" method="POST">
+            <button
+                type="submit"
+                aria-label="Log out"
+                title="Log out"
+                className="h-8 w-8 md:h-8 md:w-8 lg:h-9 lg:w-9 xl:w-auto xl:px-3 rounded-full text-sm font-medium text-[#631732] bg-[#631732]/10 border border-[#631732]/20 hover:bg-[#631732]/15 inline-flex items-center justify-center gap-0 xl:gap-1.5 shrink-0"
+            >
+                <SignOutIcon size={14} weight="bold" />
+                <span className="hidden 2xl:inline">Log out</span>
+            </button>
+        </form>
+    );
+
+    const dateControls = (
+        <>
+            <button
+                type="button"
+                onClick={jumpToToday}
+                aria-label="Today"
+                title="Today"
+                className="h-8 w-8 md:h-8 lg:h-9 md:w-9 lg:w-9 rounded-full font-medium text-[#631732] bg-[#631732]/10 border border-[#631732]/20 hover:bg-[#631732]/15 inline-flex items-center justify-center shrink-0"
+            >
+                <CalendarBlankIcon size={14} weight="bold" />
+            </button>
+            <div className="h-8 md:h-8 lg:h-9 inline-flex items-center rounded-full border border-[#631732]/20 bg-[#631732]/5 px-1 md:px-1 shrink-0 flex-1 min-w-0 justify-center md:flex-initial">
+                <button
+                    type="button"
+                    onClick={() => shiftWeek(-1)}
+                    className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-flex items-center justify-center rounded-full text-[#631732] hover:bg-[#631732]/10"
+                    aria-label="Previous week"
+                >
+                    <CaretLeftIcon size={12} weight="bold" />
+                </button>
+                <span className="px-1.5 md:px-2 lg:px-3 text-xs md:text-xs lg:text-sm font-medium text-[#631732] whitespace-nowrap">
+                    {formatWeekRangeLabel(globalDate)}
+                </span>
+                <button
+                    type="button"
+                    onClick={() => shiftWeek(1)}
+                    className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-flex items-center justify-center rounded-full text-[#631732] hover:bg-[#631732]/10"
+                    aria-label="Next week"
+                >
+                    <CaretRightIcon size={12} weight="bold" />
+                </button>
+            </div>
+            <div className="relative h-8 w-8 md:h-8 md:w-9 lg:h-9 lg:w-auto lg:min-w-[130px] shrink-0">
+                <span
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full border border-[#631732]/20 bg-white text-[#631732] lg:hidden"
+                    aria-hidden
+                >
+                    <CalendarDotsIcon size={14} weight="bold" />
+                </span>
+                <input
+                    type="date"
+                    value={globalDate}
+                    onChange={(e) => updateGlobalDate(e.target.value)}
+                    aria-label="Choose date"
+                    className="absolute inset-0 h-full w-full cursor-pointer rounded-full border-0 bg-transparent opacity-0 lg:static lg:inset-auto lg:h-9 lg:w-full lg:min-w-[130px] lg:rounded-full lg:border lg:border-[#631732]/20 lg:bg-white lg:px-3 lg:opacity-100 lg:text-sm lg:font-medium lg:text-[#631732]"
+                />
+            </div>
+        </>
+    );
+
     return (
         <div className="min-h-screen bg-slate-100">
             <header className="sticky top-0 z-40 px-4 pt-4">
                 <div className="rounded-2xl border border-[#631732]/20 bg-white/95 backdrop-blur px-4 py-2.5 shadow-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
-                        <nav className="min-w-0 flex items-center gap-1 overflow-x-auto pr-2">
-                            {nav.map(({ href, label }) => (
-                                <Link
-                                    key={href}
-                                    href={`${href}?date=${globalDate}`}
-                                    className={`h-9 px-3 inline-flex items-center rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                                        isActive(href)
-                                            ? 'purp text-white shadow-sm'
-                                            : 'text-[#631732]/80 hover:bg-[#631732]/10'
-                                    }`}
-                                >
-                                    {label}
-                                </Link>
-                            ))}
-                        </nav>
-
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="h-9 inline-flex items-center rounded-full border border-[#631732]/20 bg-[#631732]/5 px-1">
-                                <button
-                                    type="button"
-                                    onClick={() => shiftWeek(-1)}
-                                    className="w-8 h-8 inline-flex items-center justify-center rounded-full text-[#631732] hover:bg-[#631732]/10"
-                                    aria-label="Previous week"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <span className="px-3 text-sm font-medium text-[#631732] whitespace-nowrap">
-                                    {formatWeekRangeLabel(globalDate)}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => shiftWeek(1)}
-                                    className="w-8 h-8 inline-flex items-center justify-center rounded-full text-[#631732] hover:bg-[#631732]/10"
-                                    aria-label="Next week"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={jumpToToday}
-                                className="h-9 px-3 rounded-full text-sm font-medium text-[#631732] bg-[#631732]/10 border border-[#631732]/20 hover:bg-[#631732]/15"
-                            >
-                                Today
-                            </button>
-
-                            <input
-                                type="date"
-                                value={globalDate}
-                                onChange={(e) => updateGlobalDate(e.target.value)}
-                                className="h-9 px-3 rounded-full text-sm font-medium border border-[#631732]/20 bg-white text-[#631732]"
-                            />
+                    {/* Mobile: page buttons + logout in one row, then date toggles */}
+                    <div className="flex flex-col gap-2 md:hidden">
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                            <nav className="flex items-center gap-1.5 shrink-0">{navLinks}</nav>
+                            {logoutButton}
                         </div>
+                        <div className="flex items-center justify-between gap-2 min-w-0 border-t border-slate-200/80 pt-2">{dateControls}</div>
+                    </div>
 
-                        <div className="md:justify-self-end md:flex md:justify-end">
-                            <form action="/api/crm/logout" method="POST">
-                                <button
-                                    type="submit"
-                                    className="h-9 px-3 rounded-full text-sm font-medium text-[#631732] bg-[#631732]/10 border border-[#631732]/20 hover:bg-[#631732]/15"
-                                >
-                                    Log out
-                                </button>
-                            </form>
-                        </div>
+                    {/* Tablet + desktop: single row */}
+                    <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] items-center gap-2 lg:gap-3 min-w-0">
+                        <nav className="min-w-0 flex items-center gap-1.5 shrink-0">{navLinks}</nav>
+                        <div className="flex items-center justify-center gap-1.5 lg:gap-2 min-w-0 shrink-0">{dateControls}</div>
+                        <div className="justify-self-end flex justify-end shrink-0">{logoutButton}</div>
                     </div>
                 </div>
             </header>

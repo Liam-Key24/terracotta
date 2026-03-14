@@ -1,5 +1,6 @@
 import { HEADER_HEIGHT, TIME_COLUMN_HOURS } from '../constants';
 import { formatHourAmPm } from '../utils';
+import { ClockIcon } from '@phosphor-icons/react';
 
 type TimeColumnProps = {
     hourRowHeights: Record<number, number>;
@@ -16,14 +17,7 @@ export function TimeColumn({ hourRowHeights }: TimeColumnProps) {
                 style={{ height: HEADER_HEIGHT, minHeight: HEADER_HEIGHT, maxHeight: HEADER_HEIGHT }}
             >
                 <span className="rounded-full border-2 border-slate-300 flex items-center justify-center w-8 h-8" aria-hidden>
-                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
+                    <ClockIcon size={14} className="text-slate-500" />
                 </span>
             </div>
             {TIME_COLUMN_HOURS.map((hour24) => (

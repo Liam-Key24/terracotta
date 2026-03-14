@@ -1,5 +1,6 @@
 import {
     HOUR_ROW_BASE_HEIGHT,
+    HOUR_ROW_CELL_PADDING_Y,
     RESERVATION_CARD_GAP,
     RESERVATION_CARD_HEIGHT,
     TIME_COLUMN_HOURS,
@@ -172,7 +173,7 @@ export function buildCalendarData(
                 ? maxCardsInHour * RESERVATION_CARD_HEIGHT + (maxCardsInHour - 1) * RESERVATION_CARD_GAP
                 : 0;
 
-        hourRowHeights[hour] = Math.max(HOUR_ROW_BASE_HEIGHT, cardsHeight);
+        hourRowHeights[hour] = Math.max(HOUR_ROW_BASE_HEIGHT, cardsHeight + HOUR_ROW_CELL_PADDING_Y * 2);
     });
 
     return { reservationsByDate, hourRowHeights };

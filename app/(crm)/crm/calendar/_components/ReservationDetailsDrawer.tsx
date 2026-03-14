@@ -4,6 +4,19 @@ import { SLOTS_30 } from '../constants';
 import { TableReservationPopup } from './TableReservationPopup';
 import type { Reservation, Table } from '../types';
 import { formatTimeRangeLabel, getDurationMinutes, getReservationDetails, parseTimeToMinutes } from '../utils';
+import {
+    CalendarBlankIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    EnvelopeSimpleIcon,
+    NotePencilIcon,
+    PhoneIcon,
+    TableIcon,
+    UserCircleIcon,
+    UsersIcon,
+    XCircleIcon,
+    XIcon,
+} from '@phosphor-icons/react';
 
 type ReservationEditDraft = {
     name: string;
@@ -192,13 +205,17 @@ export function ReservationDetailsDrawer({
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
-                    <h3 className="text-[30px] leading-none font-semibold text-slate-800">Reservation Details</h3>
+                    <h3 className="text-[30px] leading-none font-semibold text-slate-800 inline-flex items-center gap-2">
+                        <NotePencilIcon size={24} className="text-[#631732]" />
+                        Reservation Details
+                    </h3>
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={toggleEdit}
-                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5"
                         >
+                            <NotePencilIcon size={14} />
                             {isEditing ? 'Cancel' : 'Edit'}
                         </button>
                         <button
@@ -207,9 +224,7 @@ export function ReservationDetailsDrawer({
                             className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
                             aria-label="Close"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <XIcon size={16} />
                         </button>
                     </div>
                 </div>
@@ -217,34 +232,50 @@ export function ReservationDetailsDrawer({
                 <div className="flex-1 overflow-y-auto bg-slate-50/40">
                     {!isEditing && (
                         <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-slate-200 bg-white">
-                                <div className="px-6 py-5 border-b sm:border-b-0 sm:border-r border-slate-200">
-                                    <p className="text-sm font-medium text-slate-500 mb-1">Date</p>
-                                    <p className="text-[30px] leading-tight font-semibold text-slate-900">
-                                        {details?.dateLabel ?? reservation.date}
-                                    </p>
-                                </div>
-                                <div className="px-6 py-5">
-                                    <p className="text-sm font-medium text-slate-500 mb-1">Time</p>
-                                    <p className="text-[30px] leading-tight font-semibold text-slate-900">
-                                        {details?.timeRangeLabel ?? reservation.time}
-                                    </p>
-                                </div>
+                            <div className="border-b border-slate-200 bg-white px-6 py-5">
+                                <p className="text-sm font-medium text-slate-500 mb-1 inline-flex items-center gap-1.5">
+                                    <ClockIcon size={14} />
+                                    Time
+                                </p>
+                                <p className="text-[30px] leading-tight font-semibold text-slate-900">
+                                    {details?.timeRangeLabel ?? reservation.time}
+                                </p>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-slate-200 bg-white">
                                 <div className="px-6 py-5 border-b sm:border-b-0 sm:border-r border-slate-200">
-                                    <p className="text-sm font-medium text-slate-500 mb-2">Contact</p>
-                                    <p className="text-2xl leading-tight font-semibold text-slate-900">{reservation.name}</p>
-                                    {reservation.phone && (
-                                        <p className="mt-2 text-xl leading-tight text-slate-800">{reservation.phone}</p>
-                                    )}
-                                    {reservation.email && (
-                                        <p className="mt-1 text-base text-slate-600 break-all">{reservation.email}</p>
-                                    )}
+                                    <div className="flex flex-col items-start gap-2">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-slate-500 mb-1 inline-flex items-center gap-1.5">
+                                                <UserCircleIcon size={14} />
+                                                Contact
+                                            </p>
+                                            <p className="text-[30px] leading-tight font-semibold text-slate-900 truncate">
+                                                {reservation.name}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-col items-start gap-1.5">
+                                            {reservation.phone && (
+                                                <p className="text-lg leading-tight text-slate-700 inline-flex items-center gap-1.5">
+                                                    <PhoneIcon size={16} />
+                                                    {reservation.phone}
+                                                </p>
+                                            )}
+                                            {reservation.email && (
+                                                <p className="text-lg leading-tight text-slate-700 break-all inline-flex items-center gap-1.5">
+                                                    <EnvelopeSimpleIcon size={16} />
+                                                    {reservation.email}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="px-6 py-5">
-                                    <p className="text-sm font-medium text-slate-500 mb-2">Guests</p>
+                                    <p className="text-sm font-medium text-slate-500 mb-2 inline-flex items-center gap-1.5">
+                                        <UsersIcon size={14} />
+                                        Guests
+                                    </p>
                                     <p className="text-2xl leading-tight font-semibold text-slate-900">
                                         {reservation.guests} guest{reservation.guests === '1' ? '' : 's'}
                                     </p>
@@ -252,7 +283,10 @@ export function ReservationDetailsDrawer({
                             </div>
 
                             <div className="px-6 py-5 border-b border-slate-200 bg-white">
-                                <p className="text-sm font-medium text-slate-500 mb-2">Table assignment</p>
+                                <p className="text-sm font-medium text-slate-500 mb-2 inline-flex items-center gap-1.5">
+                                    <TableIcon size={14} />
+                                    Table assignment
+                                </p>
                                 {reservation.tableIds?.length ? (
                                     <div className="flex flex-wrap gap-2">
                                         {reservation.tableIds.map((tableId) => (
@@ -272,7 +306,10 @@ export function ReservationDetailsDrawer({
                             </div>
 
                             <div className="px-6 py-5 border-b border-slate-200 bg-white">
-                                <p className="text-sm font-medium text-slate-500 mb-2">Notes</p>
+                                <p className="text-sm font-medium text-slate-500 mb-2 inline-flex items-center gap-1.5">
+                                    <NotePencilIcon size={14} />
+                                    Notes
+                                </p>
                                 <p className="text-xl leading-snug text-slate-900">
                                     {reservation.notes?.trim() ? reservation.notes : 'No notes added.'}
                                 </p>
@@ -284,7 +321,12 @@ export function ReservationDetailsDrawer({
                         <form id="reservation-edit-form" onSubmit={saveEdits} className="p-6 space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Name *</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <UserCircleIcon size={14} />
+                                            Name *
+                                        </span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={draft.name}
@@ -294,7 +336,12 @@ export function ReservationDetailsDrawer({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <CalendarBlankIcon size={14} />
+                                            Date *
+                                        </span>
+                                    </label>
                                     <input
                                         type="date"
                                         value={draft.date}
@@ -304,7 +351,12 @@ export function ReservationDetailsDrawer({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Time *</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <ClockIcon size={14} />
+                                            Time *
+                                        </span>
+                                    </label>
                                     <select
                                         value={draft.time}
                                         onChange={(e) => setDraft((prev) => ({ ...prev, time: e.target.value }))}
@@ -318,7 +370,12 @@ export function ReservationDetailsDrawer({
                                     </select>
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Table(s)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <TableIcon size={14} />
+                                            Table(s)
+                                        </span>
+                                    </label>
                                     <div className="flex flex-wrap gap-2">
                                         {tables.map((table) => (
                                             <button
@@ -337,7 +394,12 @@ export function ReservationDetailsDrawer({
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Guests</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <UsersIcon size={14} />
+                                            Guests
+                                        </span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={draft.guests}
@@ -346,7 +408,12 @@ export function ReservationDetailsDrawer({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <PhoneIcon size={14} />
+                                            Phone
+                                        </span>
+                                    </label>
                                     <input
                                         type="tel"
                                         value={draft.phone}
@@ -355,7 +422,12 @@ export function ReservationDetailsDrawer({
                                     />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <EnvelopeSimpleIcon size={14} />
+                                            Email
+                                        </span>
+                                    </label>
                                     <input
                                         type="email"
                                         value={draft.email}
@@ -364,7 +436,12 @@ export function ReservationDetailsDrawer({
                                     />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <NotePencilIcon size={14} />
+                                            Notes
+                                        </span>
+                                    </label>
                                     <textarea
                                         rows={3}
                                         value={draft.notes}
@@ -422,8 +499,9 @@ export function ReservationDetailsDrawer({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50"
+                        className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 inline-flex items-center gap-1.5"
                     >
+                        <XIcon size={14} />
                         Close
                     </button>
                     {isEditing ? (
@@ -431,8 +509,9 @@ export function ReservationDetailsDrawer({
                             type="submit"
                             form="reservation-edit-form"
                             disabled={isSaving}
-                            className="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-medium hover:bg-violet-700 disabled:opacity-60"
+                            className="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-medium hover:bg-violet-700 disabled:opacity-60 inline-flex items-center gap-1.5"
                         >
+                            <CheckCircleIcon size={14} weight="fill" />
                             {isSaving ? 'Saving...' : 'Save changes'}
                         </button>
                     ) : (
@@ -441,11 +520,13 @@ export function ReservationDetailsDrawer({
                                 type="button"
                                 onClick={toggleCancelReason}
                                 disabled={isCancelling}
-                                className="px-4 py-2.5 rounded-xl border border-rose-300 text-rose-700 font-medium hover:bg-rose-50 disabled:opacity-60"
+                                className="px-4 py-2.5 rounded-xl border border-rose-300 text-rose-700 font-medium hover:bg-rose-50 disabled:opacity-60 inline-flex items-center gap-1.5"
                             >
+                                <XCircleIcon size={14} weight="fill" />
                                 {isCancelReasonOpen ? 'Hide cancel' : 'Cancel booking'}
                             </button>
-                            <span className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-medium">
+                            <span className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-medium inline-flex items-center gap-1.5">
+                                <CheckCircleIcon size={14} weight="fill" />
                                 Confirmed
                             </span>
                         </div>

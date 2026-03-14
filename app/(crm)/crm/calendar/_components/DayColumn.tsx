@@ -58,8 +58,10 @@ export function DayColumn({
             >
                 <div className="flex flex-col items-center justify-center gap-1.5 py-1">
                     <div
-                        className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-medium ${
-                            isToday ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-50 text-slate-700'
+                        className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-medium border backdrop-blur-md ${
+                            isToday
+                                ? 'bg-[#631732]/80 text-white border-white/35 shadow-md shadow-[#631732]/25'
+                                : 'bg-[#631732]/15 text-[#631732] border-[#631732]/25 shadow-sm shadow-[#631732]/10'
                         }`}
                     >
                         <span className="uppercase tracking-wide text-[10px] opacity-80 leading-none">
@@ -70,7 +72,7 @@ export function DayColumn({
                             {dayLabel.month}
                         </span>
                     </div>
-                    <span className={`text-[10px] font-medium ${isToday ? 'text-indigo-600' : 'text-slate-500'}`}>
+                    <span className={`text-[10px] font-medium ${isToday ? 'text-[#631732]' : 'text-[#631732]/80'}`}>
                         {dayReservations.length} booking{dayReservations.length === 1 ? '' : 's'}
                     </span>
                 </div>
@@ -80,7 +82,7 @@ export function DayColumn({
                 {TIME_COLUMN_HOURS.map((hour) => (
                     <div
                         key={hour}
-                        className="border-b border-slate-100"
+                        className="border-b border-slate-100 px-2 py-2"
                         style={{ height: hourRowHeights[hour], minHeight: hourRowHeights[hour] }}
                     >
                         {(reservationsByHour[hour] ?? []).map((reservation) => (
