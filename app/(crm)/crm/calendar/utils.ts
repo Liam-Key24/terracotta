@@ -1,8 +1,12 @@
 import {
     HOUR_ROW_BASE_HEIGHT,
+    HOUR_ROW_BASE_HEIGHT_MOBILE,
     HOUR_ROW_CELL_PADDING_Y,
+    HOUR_ROW_CELL_PADDING_Y_MOBILE,
     RESERVATION_CARD_GAP,
+    RESERVATION_CARD_GAP_MOBILE,
     RESERVATION_CARD_HEIGHT,
+    RESERVATION_CARD_HEIGHT_MOBILE,
     TIME_COLUMN_HOURS,
 } from './constants';
 import type { DayReservation, Reservation } from './types';
@@ -120,7 +124,8 @@ export function getReservationDetails(reservation: Reservation | null): { dateLa
 
 export function buildCalendarData(
     reservations: Reservation[],
-    displayDates: string[]
+    displayDates: string[],
+    isMobile = false
 ): {
     reservationsByDate: Record<string, DayReservation[]>;
     hourRowHeights: Record<number, number>;
@@ -158,6 +163,11 @@ export function buildCalendarData(
         reservationsByDate[date].sort((a, b) => a.startMin - b.startMin);
     });
 
+    const cardHeight = isMobile ? RESERVATION_CARD_HEIGHT_MOBILE : RESERVATION_CARD_HEIGHT;
+    const cardGap = isMobile ? RESERVATION_CARD_GAP_MOBILE : RESERVATION_CARD_GAP;
+    const baseRowHeight = isMobile ? HOUR_ROW_BASE_HEIGHT_MOBILE : HOUR_ROW_BASE_HEIGHT;
+    const cellPaddingY = isMobile ? HOUR_ROW_CELL_PADDING_Y_MOBILE : HOUR_ROW_CELL_PADDING_Y;
+
     const hourRowHeights: Record<number, number> = {};
     TIME_COLUMN_HOURS.forEach((hour) => {
         let maxCardsInHour = 0;
@@ -169,11 +179,9 @@ export function buildCalendarData(
         });
 
         const cardsHeight =
-            maxCardsInHour > 0
-                ? maxCardsInHour * RESERVATION_CARD_HEIGHT + (maxCardsInHour - 1) * RESERVATION_CARD_GAP
-                : 0;
+            maxCardsInHour > 0 ? maxCardsInHour * cardHeight + (maxCardsInHour - 1) * cardGap : 0;
 
-        hourRowHeights[hour] = Math.max(HOUR_ROW_BASE_HEIGHT, cardsHeight + HOUR_ROW_CELL_PADDING_Y * 2);
+        hourRowHeights[hour] = Math.max(baseRowHeight, cardsHeight + cellPaddingY * 2);
     });
 
     return { reservationsByDate, hourRowHeights };

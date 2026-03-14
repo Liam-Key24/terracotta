@@ -8,9 +8,13 @@ import { CalendarHeader } from './_components/CalendarHeader';
 import { DayColumn } from './_components/DayColumn';
 import { ReservationDetailsDrawer } from './_components/ReservationDetailsDrawer';
 import { TimeColumn } from './_components/TimeColumn';
-import { DAY_COL_WIDTH } from './constants';
+import { DAY_COL_WIDTH, HEADER_HEIGHT, HEADER_HEIGHT_MOBILE } from './constants';
 import type { Reservation, ReservationCreateInput, Table } from './types';
 import { addDays, buildCalendarData, getHeaderDateLabel, getMonday } from './utils';
+
+const TIME_COL_WIDTH_MOBILE = 52;
+const TIME_COL_WIDTH_DESKTOP = 80;
+const DAY_COL_WIDTH_MOBILE = 172;
 
 export default function CrmCalendarPage() {
     const searchParams = useSearchParams();
@@ -21,6 +25,18 @@ export default function CrmCalendarPage() {
 
     const globalDate = getIsoDateOrFallback(searchParams.get('date'), new Date().toISOString().slice(0, 10));
     const startDate = useMemo(() => getMonday(globalDate), [globalDate]);
+
+    const [isDesktop, setIsDesktop] = useState(false);
+    useEffect(() => {
+        const m = window.matchMedia('(min-width: 1024px)');
+        setIsDesktop(m.matches);
+        const listener = () => setIsDesktop(m.matches);
+        m.addEventListener('change', listener);
+        return () => m.removeEventListener('change', listener);
+    }, []);
+
+    const timeColWidth = isDesktop ? TIME_COL_WIDTH_DESKTOP : TIME_COL_WIDTH_MOBILE;
+    const dayColWidth = isDesktop ? DAY_COL_WIDTH : DAY_COL_WIDTH_MOBILE;
 
     function refetchReservations() {
         fetch('/api/crm/reservations')
@@ -47,9 +63,11 @@ export default function CrmCalendarPage() {
     );
 
     const { reservationsByDate, hourRowHeights } = useMemo(
-        () => buildCalendarData(reservations, displayDates),
-        [reservations, displayDates]
+        () => buildCalendarData(reservations, displayDates, !isDesktop),
+        [reservations, displayDates, isDesktop]
     );
+
+    const headerHeight = isDesktop ? HEADER_HEIGHT : HEADER_HEIGHT_MOBILE;
 
     const todayIso = new Date().toISOString().slice(0, 10);
     const headerDateLabel = useMemo(() => getHeaderDateLabel(startDate), [startDate]);
@@ -78,16 +96,18 @@ export default function CrmCalendarPage() {
         setSelected((prev) => (prev?.id === reservationId ? null : prev));
     }
 
+    const calendarMinWidth = timeColWidth + displayDates.length * dayColWidth;
+
     return (
-        <div className="bg-gradient-to-br from-[#f3e8ff] via-[#fdf2ff] to-[#fee2e2] rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden flex flex-col max-h-[calc(100vh-5rem)] min-h-[560px]">
+        <div className="bg-gradient-to-br from-[#f3e8ff] via-[#fdf2ff] to-[#fee2e2] rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden flex flex-col max-h-[calc(100vh-5rem)] min-h-[460px] sm:min-h-[560px]">
             <CalendarHeader
                 headerDateLabel={headerDateLabel}
                 onOpenAddBooking={() => setAddOpen(true)}
             />
 
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white">
-                <div className="flex shrink-0 items-start" style={{ minWidth: 72 + displayDates.length * DAY_COL_WIDTH }}>
-                    <TimeColumn hourRowHeights={hourRowHeights} />
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-white">
+                <div className="flex shrink-0 items-start" style={{ minWidth: calendarMinWidth }}>
+                    <TimeColumn hourRowHeights={hourRowHeights} width={timeColWidth} headerHeight={headerHeight} />
                     {displayDates.map((date) => (
                         <DayColumn
                             key={date}
@@ -96,6 +116,9 @@ export default function CrmCalendarPage() {
                             isToday={date === todayIso}
                             hourRowHeights={hourRowHeights}
                             onSelectReservation={setSelected}
+                            dayColWidth={dayColWidth}
+                            headerHeight={headerHeight}
+                            compact={!isDesktop}
                         />
                     ))}
                 </div>

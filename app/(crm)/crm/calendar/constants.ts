@@ -1,9 +1,14 @@
 export const HEADER_HEIGHT = 76;
+export const HEADER_HEIGHT_MOBILE = 52;
 export const DAY_COL_WIDTH = 220;
 export const HOUR_ROW_BASE_HEIGHT = 112;
+export const HOUR_ROW_BASE_HEIGHT_MOBILE = 80;
 export const RESERVATION_CARD_HEIGHT = 72;
+export const RESERVATION_CARD_HEIGHT_MOBILE = 52;
 export const RESERVATION_CARD_GAP = 8;
+export const RESERVATION_CARD_GAP_MOBILE = 6;
 export const HOUR_ROW_CELL_PADDING_Y = 8;
+export const HOUR_ROW_CELL_PADDING_Y_MOBILE = 6;
 
 // Hours shown in time column (10am–10pm = 10..22 in 24h)
 export const TIME_COLUMN_HOURS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
