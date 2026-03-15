@@ -66,6 +66,7 @@ export default function Form(){
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
+                cache: 'no-store',
             });
 
             const errBody = await response.json().catch(() => ({}));

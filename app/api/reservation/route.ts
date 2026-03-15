@@ -266,6 +266,12 @@ const createTransporter = () => {
 };
 
 export async function POST(request: NextRequest) {
+    if (request.method !== 'POST') {
+        return NextResponse.json(
+            { error: 'Use POST to submit a reservation.' },
+            { status: 405, headers: { Allow: 'POST' } }
+        );
+    }
     try {
         const limit = checkRateLimit(request);
         if (!limit.ok) {
@@ -444,7 +450,7 @@ Please confirm this reservation with the guest as soon as possible.
 export async function GET() {
     return NextResponse.json(
         { error: 'Use POST to submit a reservation.' },
-        { status: 405 }
+        { status: 405, headers: { Allow: 'POST' } }
     );
 }
 
