@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getIsoDateOrFallback } from '../_shared/date';
 import { AddBookingModal } from './_components/AddBookingModal';
@@ -16,7 +16,16 @@ const TIME_COL_WIDTH_MOBILE = 52;
 const TIME_COL_WIDTH_DESKTOP = 80;
 const DAY_COL_WIDTH_MOBILE = 172;
 
-export default function CrmCalendarPage() {
+function CalendarPageSkeleton() {
+    return (
+        <div className="bg-gradient-to-br from-[#f3e8ff] via-[#fdf2ff] to-[#fee2e2] rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden flex flex-col max-h-[calc(100vh-5rem)] min-h-[460px] sm:min-h-[560px] animate-pulse">
+            <div className="h-14 sm:h-16 bg-white/50 border-b border-slate-200/70" />
+            <div className="flex-1 min-h-[400px] bg-white/30" />
+        </div>
+    );
+}
+
+function CrmCalendarContent() {
     const searchParams = useSearchParams();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [tables, setTables] = useState<Table[]>([]);
@@ -162,5 +171,13 @@ export default function CrmCalendarPage() {
                 />
             )}
         </div>
+    );
+}
+
+export default function CrmCalendarPage() {
+    return (
+        <Suspense fallback={<CalendarPageSkeleton />}>
+            <CrmCalendarContent />
+        </Suspense>
     );
 }
