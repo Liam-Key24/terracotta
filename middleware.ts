@@ -5,7 +5,7 @@ const COOKIE_NAME = 'crm_session';
 const SECRET = process.env.CRM_SECRET ?? process.env.ADMIN_SECRET ?? '';
 
 async function verifyCookie(value: string): Promise<{ role: string } | null> {
-    if (!value || !value.includes('.')) return null;
+    if (!SECRET || !value || !value.includes('.')) return null;
     const [payloadB64, sig] = value.split('.');
     const key = await crypto.subtle.importKey(
         'raw',
