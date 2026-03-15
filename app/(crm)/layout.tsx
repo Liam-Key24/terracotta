@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import {
     CalendarBlankIcon,
     CalendarDotsIcon,
@@ -15,7 +15,22 @@ import {
 } from '@phosphor-icons/react';
 import { formatWeekRangeLabel, getIsoDateOrFallback, parseIsoDate, toLocalIso } from './crm/_shared/date';
 
-export default function CrmLayout({ children }: { children: React.ReactNode }) {
+function CrmLayoutSkeleton() {
+    return (
+        <div className="min-h-screen bg-slate-100">
+            <header className="sticky top-0 z-40 px-4 pt-4">
+                <div className="rounded-2xl border border-[#631732]/20 bg-white/95 backdrop-blur px-4 py-2.5 shadow-sm animate-pulse">
+                    <div className="h-10 bg-slate-200/50 rounded-lg" />
+                </div>
+            </header>
+            <main className="p-4 sm:p-6">
+                <div className="h-64 bg-slate-200/30 rounded-xl" />
+            </main>
+        </div>
+    );
+}
+
+function CrmLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -179,5 +194,21 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             </header>
             <main className="p-4 sm:p-6">{children}</main>
         </div>
+    );
+}
+
+export default function CrmLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    if (pathname === '/crm' || pathname === '/crm/') {
+        return (
+            <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+                {children}
+            </div>
+        );
+    }
+    return (
+        <Suspense fallback={<CrmLayoutSkeleton />}>
+            <CrmLayoutContent>{children}</CrmLayoutContent>
+        </Suspense>
     );
 }
