@@ -71,9 +71,6 @@ export default function Form(){
 
             const errBody = await response.json().catch(() => ({}));
 
-            if (response.status === 503) {
-                fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'form/formlayout.tsx', message: 'client received 503', data: { status: response.status, error: errBody?.error }, hypothesisId: 'H4', timestamp: Date.now() }) }).catch(() => {});
-            }
             if (response.ok) {
                 setSubmitStatus('success');
                 setFormData({

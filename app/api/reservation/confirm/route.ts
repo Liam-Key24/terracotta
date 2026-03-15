@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../../_utils';
 import { addReservation, confirmationId, getAllReservations } from '../_store';
-import { addToQueue, getQueueEntryById, listQueue, removeFromQueue } from '../_queue';
+import { addToQueue, getQueueEntryById, listQueue, removeFromQueue, type QueueEntry } from '../_queue';
 import { sendConfirmationEmail } from '../sendConfirmationEmail';
 import { verifyConfirmationToken } from '../_confirmToken';
 
@@ -131,13 +131,28 @@ export async function GET(request: NextRequest) {
 
         // Approve-from-email flow: token includes queueId → add to reservations, remove from queue, email guest
         if (queueIdFromToken) {
-            const entry = getQueueEntryById(queueIdFromToken);
+            let entry: QueueEntry | null = getQueueEntryById(queueIdFromToken);
+            // On serverless (e.g. Vercel), queue is filesystem-local so confirm may hit a different instance with no queue file.
+            // Fall back to token payload so the link still works.
             if (!entry) {
-                return new NextResponse(
-                    `<!DOCTYPE html><html><head><title>Error</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;}.error{color:#dc2626;}</style></head>
-<body><h1 class="error">Request not found</h1><p>This reservation request is no longer in the queue (it may have been confirmed or declined already).</p></body></html>`,
-                    { status: 404, headers: { 'Content-Type': 'text/html' } }
-                );
+                if (!name || !email || !phone || !date || !time || !guests) {
+                    return new NextResponse(
+                        `<!DOCTYPE html><html><head><title>Error</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;}.error{color:#dc2626;}</style></head>
+<body><h1 class="error">Request not found</h1><p>This reservation request is no longer in the queue and the link data is incomplete.</p></body></html>`,
+                        { status: 404, headers: { 'Content-Type': 'text/html' } }
+                    );
+                }
+                entry = {
+                    id: queueIdFromToken,
+                    name,
+                    email,
+                    phone,
+                    date,
+                    time,
+                    guests,
+                    notes: specialRequestsRaw ?? undefined,
+                    addedAt: new Date().toISOString(),
+                };
             }
             const result = addReservation(entry.id, {
                 name: entry.name,
@@ -149,6 +164,13 @@ export async function GET(request: NextRequest) {
                 notes: entry.notes,
             });
             if (!result.success) {
+                if (result.error === 'Already exists') {
+                    const safeFormData = { name: entry.name, email: entry.email, date: entry.date, time: entry.time, guests: entry.guests };
+                    return new NextResponse(successPage('Already confirmed', safeFormData), {
+                        status: 200,
+                        headers: { 'Content-Type': 'text/html' },
+                    });
+                }
                 return new NextResponse(
                     `<!DOCTYPE html><html><head><title>Error</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;}.error{color:#dc2626;}</style></head>
 <body><h1 class="error">Could not confirm</h1><p>${escapeHtml(result.error || 'Time slot may be full.')}</p></body></html>`,

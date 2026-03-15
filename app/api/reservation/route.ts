@@ -265,10 +265,6 @@ const createTransporter = () => {
     });
 };
 
-const DEBUG_LOG = (reason: string, hypothesisId: string) => {
-    fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'api/reservation/route.ts', message: '503 or reservation flow', data: { reason }, hypothesisId, timestamp: Date.now() }) }).catch(() => {});
-};
-
 export async function POST(request: NextRequest) {
     if (request.method !== 'POST') {
         return NextResponse.json(
@@ -277,7 +273,6 @@ export async function POST(request: NextRequest) {
         );
     }
     try {
-        DEBUG_LOG('POST reservation started', 'H4');
         const limit = checkRateLimit(request);
         if (!limit.ok) {
             return NextResponse.json(
@@ -337,7 +332,6 @@ export async function POST(request: NextRequest) {
         if (confirmedCount + queueCount >= MAX_PER_SLOT) {
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? '';
             if (!baseUrl) {
-                DEBUG_LOG('503: slot full but NEXT_PUBLIC_BASE_URL missing', 'H1');
                 return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
             }
             const formUrl = `${baseUrl}/#form`;
@@ -385,7 +379,6 @@ export async function POST(request: NextRequest) {
         const payload = { ...formData, queueId };
         const confirmationToken = signConfirmationToken(payload);
         if (!confirmationToken) {
-            DEBUG_LOG('503: signConfirmationToken null (CRM_SECRET missing?)', 'H2');
             return NextResponse.json(
                 { error: 'Server configuration error' },
                 { status: 503 }
@@ -394,7 +387,6 @@ export async function POST(request: NextRequest) {
 
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? '';
         if (!baseUrl || !OWNER_EMAIL) {
-            DEBUG_LOG('503: baseUrl or OWNER_EMAIL missing', 'H3');
             return NextResponse.json(
                 { error: 'Server configuration error. Set NEXT_PUBLIC_BASE_URL and OWNER_EMAIL in .env (see env.example).' },
                 { status: 503 }
