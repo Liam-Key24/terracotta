@@ -443,8 +443,8 @@ Please confirm this reservation with the guest as soon as possible.
 
 export async function GET() {
     return NextResponse.json(
-        { message: 'Reservation API endpoint. Use POST to submit a reservation.' },
-        { status: 200 }
+        { error: 'Use POST to submit a reservation.' },
+        { status: 405 }
     );
 }
 

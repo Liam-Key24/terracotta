@@ -99,7 +99,7 @@ export default function Form(){
         <div className="w-full max-w-2xl mx-auto p-6 md:p-8" id='form'>
             <h2 className="text-3xl font-light text-center mb-8 text-[#631732]/70">Make a Reservation</h2>
             
-            <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
