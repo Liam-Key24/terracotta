@@ -352,21 +352,25 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Add to CRM queue so it appears in the CRM for approval
+        // Add to CRM queue so it appears in the CRM for approval (best-effort; may fail on read-only fs e.g. serverless)
         const queueId = `res-${randomUUID()}`;
-        const queueResult = addToQueue({
-            id: queueId,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            date: formData.date,
-            time: formData.time,
-            guests: formData.guests,
-            ...(formData.specialRequests ? { notes: formData.specialRequests } : {}),
-            addedAt: new Date().toISOString(),
-        });
-        if (!queueResult.added) {
-            console.warn('[reservation] Queue add failed:', queueResult.error);
+        try {
+            const queueResult = addToQueue({
+                id: queueId,
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                date: formData.date,
+                time: formData.time,
+                guests: formData.guests,
+                ...(formData.specialRequests ? { notes: formData.specialRequests } : {}),
+                addedAt: new Date().toISOString(),
+            });
+            if (!queueResult.added) {
+                console.warn('[reservation] Queue add failed:', queueResult.error);
+            }
+        } catch (queueErr) {
+            console.warn('[reservation] Queue add failed (e.g. read-only filesystem):', queueErr);
         }
 
         // Create transporter for sending emails
