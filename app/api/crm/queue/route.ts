@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     let entry = getQueueEntryById(queueId);
 
     if (action === 'approve') {
+        if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
         const tableIds = Array.isArray(o.tableIds) ? (o.tableIds as string[]).filter((t) => typeof t === 'string') : undefined;
         const result = addReservation(entry.id, {
             name: entry.name,
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'reject') {
+        if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
         removeFromQueue(entry.id);
         return NextResponse.json({ ok: true });
     }
