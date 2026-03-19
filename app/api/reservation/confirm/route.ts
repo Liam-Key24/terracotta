@@ -24,29 +24,32 @@ const successPage = (message: string, safeFormData: { name: string; date: string
     `<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservation</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .success { color: #16a34a; font-size: 48px; margin-bottom: 20px; }
-        h1 { color: #16a34a; margin-bottom: 20px; }
-        .details { text-align: left; background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .detail-row { padding: 8px 0; border-bottom: 1px solid #e5e5e5; }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; margin: -40px -40px 24px -40px; }
+        .header h1 { margin: 0; font-size: 20px; }
+        .success { color: #631732; font-size: 17px; margin-bottom: 16px; }
+        .details { text-align: left; background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 14px; }
+        .detail-row { padding: 6px 0; border-bottom: 1px solid #ececec; }
         .detail-row:last-child { border-bottom: none; }
-        .label { font-weight: bold; color: #16a34a; display: inline-block; width: 120px; }
+        .sub { color:#666;font-size:14px;margin-top:20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="success">✓</div>
-        <h1>${escapeHtml(message)}</h1>
-        <p>${message.includes('Already') ? 'You can close this page.' : 'The request has been queued for confirmation. We will confirm with the guest soon.'}</p>
+        <div class="header"><h1>${escapeHtml(message)}</h1></div>
+        <p class="success">${message.includes('Already') ? 'This reservation was already processed.' : 'This request has been queued for confirmation.'}</p>
         <div class="details">
-            <div class="detail-row"><span class="label">Guest:</span><span>${escapeHtml(safeFormData.name)}</span></div>
-            <div class="detail-row"><span class="label">Date:</span><span>${escapeHtml(safeFormData.date)}</span></div>
-            <div class="detail-row"><span class="label">Time:</span><span>${escapeHtml(safeFormData.time)}</span></div>
-            <div class="detail-row"><span class="label">Guests:</span><span>${escapeHtml(safeFormData.guests)}</span></div>
+            <div class="detail-row"><strong>Guest:</strong> ${escapeHtml(safeFormData.name)}</div>
+            <div class="detail-row"><strong>Date:</strong> ${escapeHtml(safeFormData.date)}</div>
+            <div class="detail-row"><strong>Time:</strong> ${escapeHtml(safeFormData.time)}</div>
+            <div class="detail-row"><strong>Guests:</strong> ${escapeHtml(safeFormData.guests)}</div>
         </div>
+        <p class="sub">You can close this page.</p>
     </div>
 </body>
 </html>`;

@@ -131,6 +131,13 @@ export function DashboardContent() {
                     suggestedDate: suggestDate,
                     suggestedTime: suggestTime,
                     suggestedTableIds: selectedTableIds.length ? selectedTableIds : undefined,
+                    entryName: drawerEntry.name,
+                    entryEmail: drawerEntry.email,
+                    entryPhone: drawerEntry.phone,
+                    entryGuests: drawerEntry.guests,
+                    entryNotes: drawerEntry.notes,
+                    entryDate: drawerEntry.date,
+                    entryTime: drawerEntry.time,
                 }),
             });
             const data = await response.json().catch(() => ({}));

@@ -29,9 +29,7 @@ export async function POST(request: NextRequest) {
     const queueId = typeof o.queueId === 'string' ? o.queueId : '';
 
     if (!queueId) return NextResponse.json({ error: 'Missing queueId' }, { status: 400 });
-
-    const entry = getQueueEntryById(queueId);
-    if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
+    let entry = getQueueEntryById(queueId);
 
     if (action === 'approve') {
         const tableIds = Array.isArray(o.tableIds) ? (o.tableIds as string[]).filter((t) => typeof t === 'string') : undefined;
@@ -73,6 +71,28 @@ export async function POST(request: NextRequest) {
         const suggestedDate = typeof o.suggestedDate === 'string' ? o.suggestedDate.trim() : '';
         const suggestedTime = typeof o.suggestedTime === 'string' ? o.suggestedTime.trim() : '';
         const suggestedTableIds = Array.isArray(o.suggestedTableIds) ? (o.suggestedTableIds as string[]).filter((t) => typeof t === 'string') : undefined;
+        // Fallback for stale queue UI state: allow suggest flow using entry data supplied by drawer.
+        if (!entry) {
+            const fallbackName = typeof o.entryName === 'string' ? o.entryName.trim() : '';
+            const fallbackEmail = typeof o.entryEmail === 'string' ? o.entryEmail.trim() : '';
+            const fallbackPhone = typeof o.entryPhone === 'string' ? o.entryPhone.trim() : '';
+            const fallbackGuests = typeof o.entryGuests === 'string' ? o.entryGuests.trim() : '';
+            const fallbackNotes = typeof o.entryNotes === 'string' ? o.entryNotes.trim() : undefined;
+            if (fallbackName && fallbackEmail && fallbackPhone && fallbackGuests) {
+                entry = {
+                    id: queueId,
+                    name: fallbackName,
+                    email: fallbackEmail,
+                    phone: fallbackPhone,
+                    guests: fallbackGuests,
+                    notes: fallbackNotes,
+                    date: typeof o.entryDate === 'string' ? o.entryDate.trim() : suggestedDate,
+                    time: typeof o.entryTime === 'string' ? o.entryTime.trim() : suggestedTime,
+                    addedAt: new Date().toISOString(),
+                };
+            }
+        }
+        if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
         if (!suggestedDate || !suggestedTime) {
             return NextResponse.json({ error: 'Missing suggestedDate or suggestedTime' }, { status: 400 });
         }
@@ -104,6 +124,8 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json({ ok: true, token });
     }
+
+    if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }
