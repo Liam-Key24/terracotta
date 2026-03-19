@@ -237,7 +237,7 @@ export function QueueEntryDrawer({
                                     className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 disabled:opacity-50 inline-flex items-center gap-1.5"
                                 >
                                     <XCircleIcon size={14} />
-                                    Reject
+                                    Reject with alternative
                                 </button>
                                 <button
                                     type="button"

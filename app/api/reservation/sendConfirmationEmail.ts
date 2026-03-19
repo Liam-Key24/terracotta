@@ -273,3 +273,51 @@ export async function sendAlternativeOfferEmail(params: {
         text: `Hi ${params.name}, we can't do your original request but we'd like to offer ${params.suggestedDate} at ${params.suggestedTime}. Confirm here: ${params.confirmUrl}`,
     });
 }
+
+function ownerAlternativeConfirmedHtml(params: {
+    name: string;
+    email: string;
+    date: string;
+    time: string;
+    guests: string;
+}): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternative confirmed</title>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; background:#f5f5f5; padding:24px;">
+    <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;">
+        <h2 style="margin:0 0 12px;color:#631732;">Alternative confirmed by guest</h2>
+        <p style="margin:0 0 8px;"><strong>Name:</strong> ${escapeHtml(params.name)}</p>
+        <p style="margin:0 0 8px;"><strong>Email:</strong> ${escapeHtml(params.email)}</p>
+        <p style="margin:0 0 8px;"><strong>Date:</strong> ${escapeHtml(params.date)}</p>
+        <p style="margin:0 0 8px;"><strong>Time:</strong> ${escapeHtml(params.time)}</p>
+        <p style="margin:0;"><strong>Guests:</strong> ${escapeHtml(params.guests)}</p>
+    </div>
+</body>
+</html>`;
+}
+
+export async function sendOwnerAlternativeConfirmedEmail(params: {
+    ownerEmail: string;
+    name: string;
+    email: string;
+    date: string;
+    time: string;
+    guests: string;
+}): Promise<void> {
+    if (MOCK_NO_EMAIL) return;
+    if (!params.ownerEmail) return;
+    const transporter = createTransporter();
+    await transporter.sendMail({
+        from: SMTP_USER ? `"Terracotta Restaurant" <${SMTP_USER}>` : '"Terracotta" <noreply@local>',
+        to: params.ownerEmail,
+        subject: `Alternative confirmed - ${params.name} (${params.date} ${params.time})`,
+        html: ownerAlternativeConfirmedHtml(params),
+        text: `Alternative confirmed by guest.\nName: ${params.name}\nEmail: ${params.email}\nDate: ${params.date}\nTime: ${params.time}\nGuests: ${params.guests}`,
+    });
+}
