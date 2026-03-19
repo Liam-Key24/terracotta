@@ -9,7 +9,6 @@ import {
     TableIcon,
     UserCircleIcon,
     UsersIcon,
-    XCircleIcon,
     XIcon,
 } from '@phosphor-icons/react/dist/ssr';
 
@@ -46,7 +45,6 @@ type QueueEntryDrawerProps = {
     onSetSuggestDate: (value: string) => void;
     onSetSuggestTime: (value: string) => void;
     onApprove: () => void;
-    onReject: () => void;
     onSuggestAlternative: () => void;
     onClose: () => void;
 };
@@ -65,7 +63,6 @@ export function QueueEntryDrawer({
     onSetSuggestDate,
     onSetSuggestTime,
     onApprove,
-    onReject,
     onSuggestAlternative,
     onClose,
 }: QueueEntryDrawerProps) {
@@ -229,15 +226,6 @@ export function QueueEntryDrawer({
                                 >
                                     <CheckCircleIcon size={14} weight="fill" />
                                     {actionLoading === 'approve' ? 'Approving…' : 'Approve'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={onReject}
-                                    disabled={actionLoading !== null}
-                                    className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 disabled:opacity-50 inline-flex items-center gap-1.5"
-                                >
-                                    <XCircleIcon size={14} />
-                                    Reject with alternative
                                 </button>
                                 <button
                                     type="button"

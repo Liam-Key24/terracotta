@@ -112,11 +112,6 @@ export function DashboardContent() {
         }
     }
 
-    function reject() {
-        setActionError('');
-        setSuggestMode(true);
-    }
-
     async function suggestAlternative() {
         if (!drawerEntry || !suggestDate || !suggestTime) return;
         setActionLoading('suggest');
@@ -228,7 +223,6 @@ export function DashboardContent() {
                 onSetSuggestDate={setSuggestDate}
                 onSetSuggestTime={setSuggestTime}
                 onApprove={approve}
-                onReject={reject}
                 onSuggestAlternative={suggestAlternative}
                 onClose={() => setDrawerEntry(null)}
             />

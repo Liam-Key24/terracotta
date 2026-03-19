@@ -8,6 +8,23 @@ import { sendAlternativeOfferEmail, sendConfirmationEmail } from '../../reservat
 const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
+function debugLog(hypothesisId: string, message: string, data: Record<string, unknown>) {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            runId: 'crm-queue-alternative-debug-1',
+            hypothesisId,
+            location: 'app/api/crm/queue/route.ts',
+            message,
+            data,
+            timestamp: Date.now(),
+        }),
+    }).catch(() => {});
+    // #endregion
+}
+
 export async function GET(request: NextRequest) {
     const auth = requireCrm(request);
     if (auth instanceof NextResponse) return auth;
@@ -73,6 +90,12 @@ export async function POST(request: NextRequest) {
         const suggestedDate = typeof o.suggestedDate === 'string' ? o.suggestedDate.trim() : '';
         const suggestedTime = typeof o.suggestedTime === 'string' ? o.suggestedTime.trim() : '';
         const suggestedTableIds = Array.isArray(o.suggestedTableIds) ? (o.suggestedTableIds as string[]).filter((t) => typeof t === 'string') : undefined;
+        debugLog('A1', 'suggest-alternative entered', {
+            queueId,
+            hasEntry: Boolean(entry),
+            hasSuggestedDate: Boolean(suggestedDate),
+            hasSuggestedTime: Boolean(suggestedTime),
+        });
         // Fallback for stale queue UI state: allow suggest flow using entry data supplied by drawer.
         if (!entry) {
             const fallbackName = typeof o.entryName === 'string' ? o.entryName.trim() : '';
@@ -92,10 +115,21 @@ export async function POST(request: NextRequest) {
                     time: typeof o.entryTime === 'string' ? o.entryTime.trim() : suggestedTime,
                     addedAt: new Date().toISOString(),
                 };
+                debugLog('A2', 'suggest-alternative rebuilt entry from payload', {
+                    queueId,
+                    hasFallbackName: Boolean(fallbackName),
+                    hasFallbackEmail: Boolean(fallbackEmail),
+                    hasFallbackPhone: Boolean(fallbackPhone),
+                    hasFallbackGuests: Boolean(fallbackGuests),
+                });
             }
         }
-        if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
+        if (!entry) {
+            debugLog('A2', 'suggest-alternative missing entry after fallback', { queueId });
+            return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
+        }
         if (!suggestedDate || !suggestedTime) {
+            debugLog('A3', 'suggest-alternative missing date/time', { queueId, suggestedDate, suggestedTime });
             return NextResponse.json({ error: 'Missing suggestedDate or suggestedTime' }, { status: 400 });
         }
         const token = createAlternative({
@@ -110,6 +144,7 @@ export async function POST(request: NextRequest) {
         });
         removeFromQueue(entry.id);
         if (!BASE_URL) {
+            debugLog('A4', 'suggest-alternative missing BASE_URL', { queueId });
             return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
         }
         const confirmUrl = `${BASE_URL}/reservation/confirm-alternative?token=${encodeURIComponent(token)}`;
@@ -121,8 +156,13 @@ export async function POST(request: NextRequest) {
                 suggestedTime,
                 confirmUrl,
             });
+            debugLog('A5', 'suggest-alternative email sent', { queueId, hasConfirmUrl: Boolean(confirmUrl) });
         } catch (err) {
             console.error('[crm/queue] Send alternative offer email failed:', err);
+            debugLog('A5', 'suggest-alternative email send failed', {
+                queueId,
+                error: err instanceof Error ? err.message : 'unknown',
+            });
         }
         return NextResponse.json({ ok: true, token });
     }
