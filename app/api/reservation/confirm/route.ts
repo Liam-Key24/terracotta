@@ -5,6 +5,21 @@ import { addToQueue, getQueueEntryById, listQueue, removeFromQueue, type QueueEn
 import { sendConfirmationEmail } from '../sendConfirmationEmail';
 import { verifyConfirmationToken } from '../_confirmToken';
 
+function debugLog(hypothesisId: string, message: string, data: Record<string, unknown>) {
+    fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            runId: 'confirm-reject-debug-1',
+            hypothesisId,
+            location: 'app/api/reservation/confirm/route.ts',
+            message,
+            data,
+            timestamp: Date.now(),
+        }),
+    }).catch(() => {});
+}
+
 const successPage = (message: string, safeFormData: { name: string; date: string; time: string; guests: string; email: string }) =>
     `<!DOCTYPE html>
 <html>
@@ -51,12 +66,13 @@ const approveSuccessPage = (safeFormData: { name: string; date: string; time: st
         .detail-row { padding: 6px 0; }
         .crm-btn { display: inline-block; background: #631732; color: #ffffff !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; margin-top: 16px; }
         .crm-btn:hover { background: #55122b; color: #ffffff; }
+        .sub { color:#666;font-size:13px;margin-top:8px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header"><h1>Reservation confirmed</h1></div>
-        <p class="success">A confirmation email has been sent to the guest. This reservation is now in the CRM.</p>
+        <p class="success">Confirmed and added to CRM.</p>
         <div class="details">
             <div class="detail-row"><strong>Guest:</strong> ${escapeHtml(safeFormData.name)}</div>
             <div class="detail-row"><strong>Date:</strong> ${escapeHtml(safeFormData.date)}</div>
@@ -64,17 +80,67 @@ const approveSuccessPage = (safeFormData: { name: string; date: string; time: st
             <div class="detail-row"><strong>Guests:</strong> ${escapeHtml(safeFormData.guests)}</div>
         </div>
         <a href="${escapeHtml(crmUrl)}" class="crm-btn" style="color:#ffffff !important; text-decoration:none;">Open CRM</a>
-        <p style="color:#666;font-size:14px;margin-top:20px;">You can close this page.</p>
+        <p style="color:#666;font-size:14px;margin-top:20px;">You can close this tab now.</p>
+        <p class="sub">Attempting to close automatically...</p>
     </div>
+    <script>
+      (function () {
+        try { window.close(); } catch (_) {}
+      })();
+    </script>
 </body>
 </html>`;
 
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const token = searchParams.get('token');
+        const parsedUrl = new URL(request.url);
+        const { searchParams } = parsedUrl;
+        let token = searchParams.get('token');
+        if (!token) {
+            const malformedTokenKey = Array.from(searchParams.keys()).find((k) => k.startsWith('token='));
+            if (malformedTokenKey) {
+                token = malformedTokenKey.slice('token='.length);
+                console.warn('[reservation/confirm] recovered token from malformed query key');
+                // #region agent log
+                debugLog('H9', 'confirm recovered token from malformed query key', {
+                    malformedKeyLength: malformedTokenKey.length,
+                    recoveredTokenLength: token.length,
+                });
+                // #endregion
+            }
+        }
+        if (!token) {
+            const rawQuery = parsedUrl.search.startsWith('?') ? parsedUrl.search.slice(1) : parsedUrl.search;
+            const decodedRawQuery = decodeURIComponent(rawQuery);
+            if (decodedRawQuery.startsWith('token=')) {
+                token = decodedRawQuery.slice('token='.length);
+                console.warn('[reservation/confirm] recovered token from raw decoded query');
+                // #region agent log
+                debugLog('H9', 'confirm recovered token from raw decoded query', {
+                    rawQueryLength: rawQuery.length,
+                    recoveredTokenLength: token.length,
+                });
+                // #endregion
+            } else {
+                // #region agent log
+                debugLog('H9', 'confirm token recovery failed', {
+                    keyCount: Array.from(searchParams.keys()).length,
+                    rawQueryLength: rawQuery.length,
+                    hasEqualsInRawQuery: decodedRawQuery.includes('='),
+                });
+                // #endregion
+            }
+        }
+        console.log('[reservation/confirm] entered', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
+        // #region agent log
+        debugLog('H1', 'confirm route entered', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
+        // #endregion
 
         if (!token || token.length > 8000) {
+            console.warn('[reservation/confirm] invalid token in query', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
+            // #region agent log
+            debugLog('H1', 'confirm rejected due to missing/oversized token', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
+            // #endregion
             return new NextResponse(`
                 <!DOCTYPE html>
                 <html>
@@ -98,6 +164,10 @@ export async function GET(request: NextRequest) {
 
         const formData = verifyConfirmationToken(token);
         if (!formData || typeof formData !== 'object') {
+            console.warn('[reservation/confirm] token verification failed', { tokenLength: token.length });
+            // #region agent log
+            debugLog('H1', 'confirm token verification failed', { tokenLength: token.length });
+            // #endregion
             return new NextResponse(`
                 <!DOCTYPE html>
                 <html>
@@ -132,6 +202,10 @@ export async function GET(request: NextRequest) {
         // Approve-from-email flow: token includes queueId → add to reservations, remove from queue, email guest
         if (queueIdFromToken) {
             let entry: QueueEntry | null = getQueueEntryById(queueIdFromToken);
+            console.log('[reservation/confirm] queue lookup', { queueIdFromToken, foundQueueEntry: Boolean(entry) });
+            // #region agent log
+            debugLog('H2', 'confirm queue lookup result', { queueIdFromToken, foundQueueEntry: Boolean(entry) });
+            // #endregion
             // On serverless (e.g. Vercel), queue is filesystem-local so confirm may hit a different instance with no queue file.
             // Fall back to token payload so the link still works.
             if (!entry) {
@@ -163,6 +237,10 @@ export async function GET(request: NextRequest) {
                 guests: entry.guests,
                 notes: entry.notes,
             });
+            console.log('[reservation/confirm] addReservation result', { queueIdFromToken, success: result.success, error: result.error ?? null });
+            // #region agent log
+            debugLog('H3', 'confirm addReservation result', { queueIdFromToken, success: result.success, error: result.error ?? null });
+            // #endregion
             if (!result.success) {
                 if (result.error === 'Already exists') {
                     const safeFormData = { name: entry.name, email: entry.email, date: entry.date, time: entry.time, guests: entry.guests };
@@ -178,6 +256,10 @@ export async function GET(request: NextRequest) {
                 );
             }
             removeFromQueue(queueIdFromToken);
+            console.log('[reservation/confirm] removeFromQueue called', { queueIdFromToken });
+            // #region agent log
+            debugLog('H4', 'confirm queue removal attempted', { queueIdFromToken });
+            // #endregion
             try {
                 await sendConfirmationEmail({
                     name: entry.name,
@@ -187,8 +269,37 @@ export async function GET(request: NextRequest) {
                     guests: entry.guests,
                     specialRequests: entry.notes,
                 });
+                console.log('[reservation/confirm] customer confirmation email sent', {
+                    queueIdFromToken,
+                    hasRecipientEmail: Boolean(entry.email),
+                });
+                // #region agent log
+                debugLog('H11', 'confirm customer email sent', {
+                    queueIdFromToken,
+                    hasRecipientEmail: Boolean(entry.email),
+                });
+                // #endregion
             } catch (err) {
                 console.error('[reservation/confirm] Send confirmation email failed:', err);
+                console.error('[reservation/confirm] customer email diagnostics', {
+                    queueIdFromToken,
+                    hasSmtpHost: Boolean(process.env.SMTP_HOST),
+                    hasSmtpUser: Boolean(process.env.SMTP_USER),
+                    hasSmtpPass: Boolean(process.env.SMTP_PASS),
+                    hasOwnerEmail: Boolean(process.env.OWNER_EMAIL),
+                });
+                // #region agent log
+                debugLog('H5', 'confirm guest email send failed', { queueIdFromToken, error: err instanceof Error ? err.message : 'unknown' });
+                // #endregion
+                // #region agent log
+                debugLog('H11', 'confirm customer email diagnostics', {
+                    queueIdFromToken,
+                    hasSmtpHost: Boolean(process.env.SMTP_HOST),
+                    hasSmtpUser: Boolean(process.env.SMTP_USER),
+                    hasSmtpPass: Boolean(process.env.SMTP_PASS),
+                    hasOwnerEmail: Boolean(process.env.OWNER_EMAIL),
+                });
+                // #endregion
             }
             const safeFormData = {
                 name: entry.name,

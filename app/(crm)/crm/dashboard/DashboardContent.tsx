@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CalendarCheckIcon, ClockIcon, QueueIcon, TableIcon } from '@phosphor-icons/react/dist/ssr';
 
 import { getIsoDateOrFallback, toLocalIso } from '../_shared/date';
@@ -112,29 +112,9 @@ export function DashboardContent() {
         }
     }
 
-    async function reject() {
-        if (!drawerEntry) return;
-        setActionLoading('reject');
+    function reject() {
         setActionError('');
-        try {
-            const response = await fetch('/api/crm/queue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'reject', queueId: drawerEntry.id }),
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                setActionError(typeof data?.error === 'string' ? data.error : 'Failed to reject.');
-                return;
-            }
-
-            removeQueueEntry(drawerEntry.id);
-            setDrawerEntry(null);
-        } catch {
-            setActionError('Request failed.');
-        } finally {
-            setActionLoading(null);
-        }
+        setSuggestMode(true);
     }
 
     async function suggestAlternative() {
@@ -168,6 +148,13 @@ export function DashboardContent() {
             setActionLoading(null);
         }
     }
+
+    useEffect(() => {
+        const queueId = searchParams.get('queueId');
+        if (!queueId || isLoading || drawerEntry) return;
+        const match = queue.find((entry) => entry.id === queueId);
+        if (match) openQueueEntry(match);
+    }, [searchParams, isLoading, queue, drawerEntry]);
 
     return (
         <div className="mx-auto w-full max-w-[1320px]">

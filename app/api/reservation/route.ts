@@ -215,17 +215,17 @@ const reservationEmailTemplate = (formData: {
                     ` : ''}
                 </div>
                 <div class="button-container">
-                    <p>Confirm or decline this reservation:</p>
+                    <p>Confirm now or open in CRM for alternatives:</p>
                     <table class="button-row" role="presentation" cellpadding="0" cellspacing="0">
                         <tr>
                             <td class="button-cell"><a href="${confirmationUrl}" class="confirm-button" style="background:#16a34a; color:#ffffff !important; text-decoration:none;">Confirm</a></td>
-                            <td class="button-cell"><a href="${rejectUrl}" class="reject-button" style="color:#ffffff !important; text-decoration:none;">Reject</a></td>
+                            <td class="button-cell"><a href="${rejectUrl}" class="reject-button" style="color:#ffffff !important; text-decoration:none;">Review in CRM</a></td>
                         </tr>
                     </table>
                 </div>
                 <div class="footer">
                     <p>Submitted via the Terracotta website.</p>
-                    <p>Use the buttons above to confirm or decline and remove from the queue.</p>
+                    <p>Use confirm to approve instantly, or review in CRM to offer an alternative time.</p>
                 </div>
             </div>
         </div>
@@ -393,7 +393,7 @@ export async function POST(request: NextRequest) {
             );
         }
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
-        const rejectUrl = `${baseUrl}/api/reservation/reject?queueId=${encodeURIComponent(queueId)}`;
+        const rejectUrl = `${baseUrl}/crm/dashboard?queueId=${encodeURIComponent(queueId)}&source=email-reject`;
 
         const htmlEmail = reservationEmailTemplate(formData, confirmationUrl, rejectUrl);
 

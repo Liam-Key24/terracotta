@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { getDataDir } from './_dataDir';
 import { getRetentionCutoffDate, getRetentionCutoffMs } from './_retention';
 
 const MAX_PER_SLOT = 5;
@@ -29,11 +30,11 @@ export type ReservationCancellationRecord = {
 };
 
 function getReservationsPath(): string {
-    return join(process.cwd(), 'data', 'reservations.json');
+    return join(getDataDir(), 'reservations.json');
 }
 
 function getCancellationsPath(): string {
-    return join(process.cwd(), 'data', 'reservation-cancellations.json');
+    return join(getDataDir(), 'reservation-cancellations.json');
 }
 
 function readAll(): ReservationRecord[] {
@@ -54,7 +55,7 @@ function readAll(): ReservationRecord[] {
 
 function writeAll(entries: ReservationRecord[]): void {
     const path = getReservationsPath();
-    const dir = join(process.cwd(), 'data');
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
 }
@@ -77,7 +78,7 @@ function readCancellations(): ReservationCancellationRecord[] {
 
 function writeCancellations(entries: ReservationCancellationRecord[]): void {
     const path = getCancellationsPath();
-    const dir = join(process.cwd(), 'data');
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
 }

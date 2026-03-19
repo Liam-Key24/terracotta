@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAlternativeByToken, removeAlternative } from '../../reservation/_alternatives';
 import { addReservation, countForSlot } from '../../reservation/_store';
-import { sendConfirmationEmail } from '../../reservation/sendConfirmationEmail';
+import { sendConfirmationEmail, sendOwnerAlternativeConfirmedEmail } from '../../reservation/sendConfirmationEmail';
+
+const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
 
 export async function GET(request: NextRequest) {
     const token = request.nextUrl.searchParams.get('token');
@@ -55,6 +57,18 @@ export async function POST(request: NextRequest) {
         });
     } catch (err) {
         console.error('[alternatives] Send confirmation email failed:', err);
+    }
+    try {
+        await sendOwnerAlternativeConfirmedEmail({
+            ownerEmail: OWNER_EMAIL,
+            name: entry.name,
+            email: entry.email,
+            date: entry.suggestedDate,
+            time: entry.suggestedTime,
+            guests: entry.guests,
+        });
+    } catch (err) {
+        console.error('[alternatives] Send owner alternative-confirmed email failed:', err);
     }
     return NextResponse.json({ ok: true, record: result.record });
 }

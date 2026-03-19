@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { getDataDir } from './_dataDir';
 import { getRetentionCutoffMs } from './_retention';
 
 export type QueueEntry = {
@@ -15,7 +16,7 @@ export type QueueEntry = {
 };
 
 function getQueuePath(): string {
-    return join(process.cwd(), 'data', 'reservation-queue.json');
+    return join(getDataDir(), 'reservation-queue.json');
 }
 
 function readQueue(): QueueEntry[] {
@@ -36,7 +37,7 @@ function readQueue(): QueueEntry[] {
 
 function writeQueue(entries: QueueEntry[]): void {
     const path = getQueuePath();
-    const dir = join(process.cwd(), 'data');
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
 }
