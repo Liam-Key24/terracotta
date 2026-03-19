@@ -132,23 +132,23 @@ export async function POST(request: NextRequest) {
             debugLog('A3', 'suggest-alternative missing date/time', { queueId, suggestedDate, suggestedTime });
             return NextResponse.json({ error: 'Missing suggestedDate or suggestedTime' }, { status: 400 });
         }
-        const token = createAlternative({
-            name: entry.name,
-            email: entry.email,
-            phone: entry.phone,
-            guests: entry.guests,
-            notes: entry.notes,
-            suggestedDate,
-            suggestedTime,
-            suggestedTableIds: suggestedTableIds?.length ? suggestedTableIds : undefined,
-        });
-        removeFromQueue(entry.id);
-        if (!BASE_URL) {
-            debugLog('A4', 'suggest-alternative missing BASE_URL', { queueId });
-            return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
-        }
-        const confirmUrl = `${BASE_URL}/reservation/confirm-alternative?token=${encodeURIComponent(token)}`;
         try {
+            const token = createAlternative({
+                name: entry.name,
+                email: entry.email,
+                phone: entry.phone,
+                guests: entry.guests,
+                notes: entry.notes,
+                suggestedDate,
+                suggestedTime,
+                suggestedTableIds: suggestedTableIds?.length ? suggestedTableIds : undefined,
+            });
+            removeFromQueue(entry.id);
+            if (!BASE_URL) {
+                debugLog('A4', 'suggest-alternative missing BASE_URL', { queueId });
+                return NextResponse.json({ error: 'Server configuration error (NEXT_PUBLIC_BASE_URL missing)' }, { status: 503 });
+            }
+            const confirmUrl = `${BASE_URL}/reservation/confirm-alternative?token=${encodeURIComponent(token)}`;
             await sendAlternativeOfferEmail({
                 name: entry.name,
                 email: entry.email,
@@ -157,14 +157,16 @@ export async function POST(request: NextRequest) {
                 confirmUrl,
             });
             debugLog('A5', 'suggest-alternative email sent', { queueId, hasConfirmUrl: Boolean(confirmUrl) });
+            return NextResponse.json({ ok: true, token });
         } catch (err) {
-            console.error('[crm/queue] Send alternative offer email failed:', err);
-            debugLog('A5', 'suggest-alternative email send failed', {
+            const message = err instanceof Error ? err.message : 'unknown';
+            console.error('[crm/queue] suggest-alternative failed:', err);
+            debugLog('A6', 'suggest-alternative failed', {
                 queueId,
-                error: err instanceof Error ? err.message : 'unknown',
+                error: message,
             });
+            return NextResponse.json({ error: `Failed to send alternative offer: ${message}` }, { status: 500 });
         }
-        return NextResponse.json({ ok: true, token });
     }
 
     if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
