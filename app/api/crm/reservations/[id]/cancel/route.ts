@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCrm } from '../../../requireAuth';
-import { cancelReservation } from '../../../../reservation/_store';
+import { cancelReservationWithKvFallback } from '../../../../reservation/_store';
 
 export async function POST(
     request: NextRequest,
@@ -25,7 +25,7 @@ export async function POST(
         return NextResponse.json({ error: 'Cancellation reason is required' }, { status: 400 });
     }
 
-    const result = cancelReservation(id, reason);
+    const result = await cancelReservationWithKvFallback(id, reason);
     if (!result.success) {
         return NextResponse.json({ error: result.error ?? 'Unable to cancel booking' }, { status: 400 });
     }

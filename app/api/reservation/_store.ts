@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { getDataDir } from './_dataDir';
 import { getRetentionCutoffDate, getRetentionCutoffMs } from './_retention';
+import { isKvConfigured, kvGetReservationsJson, kvSetCancellationsJson, kvSetReservationsJson } from './_kv';
 
 const MAX_PER_SLOT = 5;
 
@@ -37,7 +38,7 @@ function getCancellationsPath(): string {
     return join(getDataDir(), 'reservation-cancellations.json');
 }
 
-function readAll(): ReservationRecord[] {
+function readReservationsFromFile(): ReservationRecord[] {
     const path = getReservationsPath();
     try {
         if (!existsSync(path)) return [];
@@ -53,11 +54,18 @@ function readAll(): ReservationRecord[] {
     }
 }
 
+function readAll(): ReservationRecord[] {
+    return readReservationsFromFile();
+}
+
 function writeAll(entries: ReservationRecord[]): void {
     const path = getReservationsPath();
     const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
+    if (isKvConfigured()) {
+        void kvSetReservationsJson(JSON.stringify(entries)).catch(() => {});
+    }
 }
 
 function readCancellations(): ReservationCancellationRecord[] {
@@ -81,6 +89,9 @@ function writeCancellations(entries: ReservationCancellationRecord[]): void {
     const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
+    if (isKvConfigured()) {
+        void kvSetCancellationsJson(JSON.stringify(entries)).catch(() => {});
+    }
 }
 
 function slotKey(date: string, time: string): string {
@@ -98,6 +109,109 @@ export function confirmationId(token: string): string {
 
 export function getAllReservations(): ReservationRecord[] {
     return readAll();
+}
+
+function mergeReservationsById(a: ReservationRecord[], b: ReservationRecord[]): ReservationRecord[] {
+    const m = new Map<string, ReservationRecord>();
+    for (const r of a) m.set(r.id, r);
+    for (const r of b) m.set(r.id, r);
+    return Array.from(m.values());
+}
+
+function applyReservationDateRetention(list: ReservationRecord[]): ReservationRecord[] {
+    const cutoff = getRetentionCutoffDate();
+    return list.filter((r) => r.date >= cutoff);
+}
+
+/** Merge file + KV so CRM lists and cancel work across Vercel serverless instances. */
+export async function getMergedReservations(): Promise<ReservationRecord[]> {
+    const file = readReservationsFromFile();
+    if (!isKvConfigured()) return file;
+
+    const raw = await kvGetReservationsJson();
+    if (!raw) {
+        if (file.length > 0) {
+            void kvSetReservationsJson(JSON.stringify(file)).catch(() => {});
+        }
+        return file;
+    }
+
+    let kvList: ReservationRecord[];
+    try {
+        kvList = JSON.parse(raw) as ReservationRecord[];
+    } catch {
+        return file;
+    }
+
+    if (!Array.isArray(kvList)) return file;
+
+    if (kvList.length === 0 && file.length > 0) {
+        void kvSetReservationsJson(JSON.stringify(file)).catch(() => {});
+        return file;
+    }
+
+    if (file.length === 0) {
+        return applyReservationDateRetention(kvList);
+    }
+
+    const merged = mergeReservationsById(file, kvList);
+    return applyReservationDateRetention(merged);
+}
+
+/**
+ * If the reservation exists only in KV (another instance wrote it), cancel using KV + sync file.
+ */
+export async function cancelReservationWithKvFallback(
+    id: string,
+    reason: string
+): Promise<{
+    success: boolean;
+    cancelled?: ReservationRecord;
+    record?: ReservationCancellationRecord;
+    error?: string;
+}> {
+    const trimmedReason = String(reason ?? '').trim();
+    if (!trimmedReason) return { success: false, error: 'Cancellation reason is required' };
+
+    const first = cancelReservation(id, reason);
+    if (first.success) return first;
+    if (first.error !== 'Reservation not found') return first;
+    if (!isKvConfigured()) return first;
+
+    const raw = await kvGetReservationsJson();
+    if (!raw) return first;
+
+    let arr: ReservationRecord[];
+    try {
+        arr = JSON.parse(raw) as ReservationRecord[];
+    } catch {
+        return first;
+    }
+    if (!Array.isArray(arr)) return first;
+
+    const index = arr.findIndex((r) => r.id === id);
+    if (index === -1) return first;
+
+    const [cancelled] = arr.splice(index, 1);
+    await kvSetReservationsJson(JSON.stringify(arr));
+    writeAll(arr);
+
+    const cancellationRecord: ReservationCancellationRecord = {
+        id: createHash('sha256')
+            .update(`${Date.now()}-${cancelled.id}-${trimmedReason}`)
+            .digest('hex'),
+        reservationId: cancelled.id,
+        reservationNumber: cancelled.number,
+        reason: trimmedReason,
+        cancelledAt: new Date().toISOString(),
+        reservation: cancelled,
+    };
+
+    const cancellations = readCancellations();
+    cancellations.unshift(cancellationRecord);
+    writeCancellations(cancellations);
+
+    return { success: true, cancelled, record: cancellationRecord };
 }
 
 export function addReservation(

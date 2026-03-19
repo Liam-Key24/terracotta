@@ -3,7 +3,7 @@ import { createHmac } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getCrmSession } from '../../requireAuth';
-import { getAllReservations, listReservationCancellations } from '../../../reservation/_store';
+import { getMergedReservations, listReservationCancellations } from '../../../reservation/_store';
 import { listQueue } from '../../../reservation/_queue';
 
 const REVEAL_SECRET = process.env.CRM_SECRET || process.env.ADMIN_SECRET || '';
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     if (!revealToken || !verifyRevealToken(revealToken)) {
         return NextResponse.json({ error: 'Reveal required' }, { status: 403 });
     }
-    const reservations = getAllReservations();
+    const reservations = await getMergedReservations();
     const cancellations = listReservationCancellations();
     const queue = listQueue();
     const alternatives = readJsonFile('reservation-alternatives.json');

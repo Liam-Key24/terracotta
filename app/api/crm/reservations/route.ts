@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCrm } from '../requireAuth';
-import { getAllReservations, addReservation } from '../../reservation/_store';
+import { getMergedReservations, addReservation } from '../../reservation/_store';
 import { createHash } from 'node:crypto';
 
 export async function GET(request: NextRequest) {
     const auth = requireCrm(request);
     if (auth instanceof NextResponse) return auth;
-    const list = getAllReservations();
+    const list = await getMergedReservations();
     return NextResponse.json(list);
 }
 
