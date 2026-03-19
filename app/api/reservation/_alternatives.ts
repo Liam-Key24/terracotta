@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { getRetentionCutoffMs } from './_retention';
+import { getDataDir } from './_dataDir';
 
 const EXPIRY_DAYS = 7;
 
@@ -19,7 +20,7 @@ export type AlternativeEntry = {
 };
 
 function getAlternativesPath(): string {
-    return join(process.cwd(), 'data', 'reservation-alternatives.json');
+    return join(getDataDir(), 'reservation-alternatives.json');
 }
 
 function readAlternatives(): AlternativeEntry[] {
@@ -40,7 +41,7 @@ function readAlternatives(): AlternativeEntry[] {
 
 function writeAlternatives(entries: AlternativeEntry[]): void {
     const path = getAlternativesPath();
-    const dir = join(process.cwd(), 'data');
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
 }
