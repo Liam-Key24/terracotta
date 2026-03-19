@@ -76,9 +76,9 @@ export async function GET(request: NextRequest) {
     }
 
     const entry = getQueueEntryById(queueId);
-    console.log('[reservation/reject] queue lookup/removal', { queueId, foundEntry: Boolean(entry), removed });
+    console.log('[reservation/reject] queue lookup', { queueId, foundEntry: Boolean(entry) });
     // #region agent log
-    debugLog('H7', 'reject queue lookup/removal result', { queueId, foundEntry: Boolean(entry), removed });
+    debugLog('H7', 'reject queue lookup result', { queueId, foundEntry: Boolean(entry) });
     // #endregion
 
     const targetBase = BASE_URL || new URL(request.url).origin;
