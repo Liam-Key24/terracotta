@@ -103,7 +103,8 @@ export function ReservationDetailsDrawer({
         setSaveError(null);
 
         try {
-            const resp = await fetch(`/api/crm/reservations/${reservation.id}`, {
+            const reservationIdPath = encodeURIComponent(reservation.id);
+            const resp = await fetch(`/api/crm/reservations/${reservationIdPath}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -144,10 +145,18 @@ export function ReservationDetailsDrawer({
         setCancelError(null);
 
         try {
-            const resp = await fetch(`/api/crm/reservations/${reservation.id}/cancel`, {
+            const reservationIdPath = encodeURIComponent(reservation.id);
+            const resp = await fetch(`/api/crm/reservations/${reservationIdPath}/cancel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reason }),
+                body: JSON.stringify({
+                    reason,
+                    name: reservation.name,
+                    email: reservation.email,
+                    date: reservation.date,
+                    time: reservation.time,
+                    guests: reservation.guests,
+                }),
             });
 
             const payload = await resp.json().catch(() => ({}));
@@ -156,7 +165,11 @@ export function ReservationDetailsDrawer({
                 return;
             }
 
-            onCancelled(reservation.id);
+            const cancelledId =
+                payload && typeof payload === 'object' && payload.cancelled && typeof payload.cancelled.id === 'string'
+                    ? payload.cancelled.id
+                    : reservation.id;
+            onCancelled(cancelledId);
             onClose();
         } catch {
             setCancelError('Something went wrong while cancelling.');
