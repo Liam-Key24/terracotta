@@ -4,14 +4,14 @@ export const foodData = [
         title: 'Tapas',
         items: [
             {
-                name: "Aceitunas Marinadas",
+                name: "Aceitunas y Pan",
                 description: "Mixed marinated olives brightened with citrus and fragrant herbs.",
-                price: "£3.50"
+                price: "£4.50"
             },
             {
                 name: "Jamón Ibérico and Manchego",
                 description: "Fine cured ham paired with rich, nutty Spanish cheese.",
-                price: "£9.50"
+                price: "£12"
             },
             {
                 name: "Pan con Tomate Vegan",
@@ -26,32 +26,32 @@ export const foodData = [
             {
                 name: "Croquetas de Jamón",
                 description: "Silky béchamel croquettes filled with smoky Iberian ham.",
-                price: "£7"
+                price: "£8"
             },
             {
                 name: "Gambas al Ajillo",
                 description: "Sizzling prawns bathed in garlic, chilli, and warm olive oil.",
-                price: "£9"
+                price: "£10"
             },
             {
                 name: "Chorizo al Vino Tinto",
                 description: "Spicy chorizo gently simmered in rich red wine.",
-                price: "£7"
+                price: "£8"
             },
             {
                 name: "Albondigas",
                 description: "Tender beef meatballs with ginger in a light, aromatic tomato sauce.",
-                price: "£7"
+                price: "£9"
             },
             {
-                name: "Chicken Skewers",
-                description: "Chargrilled chicken marinated in yoghurt, lemon, and warm spices.",
-                price: "£9"
+                name: "Pollo Picante",
+                description: "Marinated oven baked chicken lemon, and warm spices. Served with Seasonal vegetables.",
+                price: "£12"
             },
             {
                 name: "Mejillones al Vapor",
                 description: "Fresh mussels steamed with white wine and herbs.",
-                price: "£8"
+                price: "£10"
             },
             {
                 name: "Tortilla Española V",
@@ -59,19 +59,49 @@ export const foodData = [
                 price: "£7"
             },
             {
-                name: "Pimientos de Padrón",
+                name: "Padrón peppers",
                 description: "Blistered green peppers finished with sea salt.",
                 price: "£6"
             },
             {
                 name: "Champion Con Queso",
                 description: "Champion with melted Gorgonzola cheese.",
-                price: "£7"
+                price: "£8"
             },
             {
                 name: "Berenjenas",
                 description: "Crisp baked aubergine topped with melted manchego cheese.",
-                price: "£8"
+                price: "£9"
+            },
+            {
+                name:'Rollitos de Queso', 
+                description: "Butter pastary stuffed with cheese and drill servered with sweet and sour sauce.",
+                price: "£7"
+            },
+            {
+                name: 'Croquetes de Bacalao',
+                description: 'Creamy bechamel croquettes filled with cod and served with a tartar sauce.',
+                price: '£9'
+            },
+            {
+                name: 'Delicias de bacalao',
+                description: 'Crispy cod fillet with garlic aioli',
+                price: '£9'
+            }, 
+            {
+                name: 'Pescaditos fritos',
+                description: 'Fried whitebait served with tartare sauce and lemon.',
+                price: '£9'
+            },
+            {
+                name: 'Calamri Fritos',
+                description: 'Deep fried fresh squid served with tartare sauce',
+                price: '£10'
+            },
+            {
+                name: 'Pulpo a la Galega',
+                description: 'Grilled octopus with smoked paprika, aioli served with creamed potatoes',
+                price: '£15'
             }
         ],
         imagePath: "/assets/menu/tapas-menu.jpg",
@@ -86,35 +116,30 @@ export const foodData = [
         title: 'Pizza',
         items: [
             {
-                name: "Garlic Bread V",
-                description: "Warm focaccia brushed with garlic and olive oil.",
-                price: "£5.95"
-            },
-            {
                 name: "Margherita V",
                 description: "Tomato, mozzarella, basil, and parmesan on a simple, perfect base.",
-                price: "£8.95"
+                price: "£9.95"
             },
             {
                 name: "Vegetariana V",
                 description: "Grilled seasonal vegetables over mozzarella, tomato, and parmesan.",
-                price: "£9.95"
+                price: "£10.95"
             },
             {
                 name: "Diavola",
                 description: "Spicy chorizo, red onion, fresh chillies, and mozzarella.",
-                price: "£10.95"
-            },
-            {
-                name: "Formaggi V",
-                description: "A rich blend of goat`s cheese, parmesan, and fior di latte.",
                 price: "£11.95"
             },
             {
                 name: "Terracotta",
                 description: "Mozzarella and cherry tomatoes topped with parma ham, rocket, and parmesan.",
                 price: "£12.95"
-            }
+            },
+            {
+                name: "Tarufata V",
+                description: "Buffalo Mozerlla, mushrooms, parmesan shavings, fresh basil and truffle oil.",
+                price: "£12.95"
+            },
         ],
         imagePath: "/assets/menu/pizza-menu.jpg",
         imageHeight: "90vh",
@@ -131,18 +156,24 @@ export const foodData = [
             {
                 name: "Paella de Pollo",
                 description: "Traditional chicken paella with saffron rice and garden vegetables.",
-                price: "£22"
+                price: "£25.95"
             },
             {
                 name: "Paella Pollo y Chorizo",
                 description: "Chicken and spicy chorizo cooked through aromatic saffron rice.",
-                price: "£24"
+                price: "£26.95"
             },
             {
                 name: "Paella Marisco",
                 description: "A generous paella of mixed fresh seafood and saffron rice.",
-                price: "£26"
-            }
+                price: "£26.95"
+            }, 
+            {
+                name: "Paella de Verduras V",
+                description: "A generous paella of mixed fresh vegetables and saffron rice.",
+                price: "£24.95"
+            }, 
+
         ],
         imagePath: "/assets/menu/paella-menu.jpg",
         imageHeight: "50vh",
@@ -152,18 +183,18 @@ export const foodData = [
         imageBgPosition: "bottom"
     },
     {
-        id: 'traditional',
-        title: 'Traditional',
+        id: 'mains',
+        title: 'Mains',
         items: [
             {
-                name: "Ravioli de Cangrejo",
-                description: "Creamy crab ravioli with a rich tomato sauce.",
+                name: "Ravioli",
+                description: "Creamy crab ravioli with a rich tomato sauce, with courgette shavings.",
                 price: "£13"
             },
             {
-                name: "Carilleras",
-                description: "Slow cooked Wild Boar cheeks in Red wine. ",
-                price: "£18"
+                name: "Carilleras de Cerdo",
+                description: "Slow cooked Wild Boar cheeks in Red wine served with a creamy mash.",
+                price: "£14"
             },
             {
                 name: "Cordero con Patatas y Cebolla",
@@ -174,6 +205,17 @@ export const foodData = [
                 name: "Sopa de Pescado",
                 description: "A warming stew of mixed fish in a rich, aromatic broth.",
                 price: "£18"
+            },
+            {
+                name: "Pescado del dias",
+                description: "Fish of the day served with a side of seasonal vegetables.",
+                price: "£18"
+            }, 
+            {
+                name: "Frittura Mista (for two)", 
+                description: "Mixed fried fish and seafood served with a side of seasonal vegetables.",
+                price: "£19.95"
+
             }
         ],
         imagePath: "/assets/hero-background.avif",
@@ -190,17 +232,22 @@ export const foodData = [
             {
                 name: "Beetroot Salad",
                 description: "Goat cheese, balsamic vinegar.",
-                price: "£9"
+                price: "£12"
             },
             {
-                name: "Escalivada Salad V",
-                description: "Warm roasted Catalan vegetables with olive oil and herbs.",
-                price: "£10"
+                name: "Enslade de Tomate V",
+                description: "Freah tomatoes, rocket, parmesan shavings and baslmic vinegar dressing.",
+                price: "£7"
             },
             {
                 name: "Ensalada de Gambas",
                 description: "Mixed leaves with pan fried prawns, avocado, and cherry tomatoes.",
-                price: "£10"
+                price: "£12"
+            },
+            {
+                name: "Ensalada de Tris colores V",
+                description: "Avocado, tomato, mozzarella",
+                price: "£9"
             }
         ],
         imagePath: "/assets/menu/Salad-menu.jpg",
@@ -217,22 +264,22 @@ export const foodData = [
             {
                 name: "Churros con Chocolate",
                 description: "Crisp warm churros served with a rich chocolate sauce.",
-                price: "£6"
+                price: "£7"
             },
             {
                 name: "Crema Catalana",
                 description: "Silky citrus custard topped with a delicate caramel crust.",
-                price: "£6"
+                price: "£7"
             },
             {
                 name: "Tiramisu",
                 description: "Light mascarpone layered with espresso soaked sponge.",   
-                price: "£6"
+                price: "£7"
             },
             {
-                name: "Cheese Cake",
-                description: "Creamy baked cheesecake with a buttery biscuit base.",
-                price: "£6"
+                name: "Cheese Platter",
+                description: "Selection of cheeses, crackers",
+                price: "£12"
             }
         ],
         imagePath: "/assets/menu/dessert-menu.jpg",

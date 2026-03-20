@@ -72,12 +72,14 @@ export const drinksData = [
     imageBgPosition: "center"
   },
   {
-    id: 'beers',
-    title: 'Beers',
+    id: "beers",
+    title: "Beers",
     items: [
-      { name: "Estrella Galicia", price: "£4" },
-      { name: "Moretti", price: "£4" },
-      { name: "Peroni", price: "£4" }
+      { name: "Estrella Galicia", price: "£5" },
+      { name: "Moretti", price: "£5" },
+      { name: "Peroni", price: "£5" },
+      { name: "Malaga", price: "£6" },
+      { name: "Alhambra", price: "£7" }
     ],
     imagePath: "/assets/menu/Beer-image.jpg",
     imageHeight: "20vh",

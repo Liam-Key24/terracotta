@@ -1,135 +1,160 @@
 
 export const wineListData = [
   // WHITE WINE
+  
   {
     category: "White Wine",
-    name: "Trebbiano d'Abruzzo",
-    description: "Italian origin, light and fresh , with floral and fruity notes..",
-    price: "£7.50 | £24.50"
+    name: "Trebbiano d’Abruzzo",
+    description: "Italy. Light and fresh, with a floral and fruity bouquet; apple and pear fragrances to the fore.",
+    price: "£7.50 | £26"
   },
   {
     category: "White Wine",
-    name: "Macabeo, Campules La Rubia",
-    description: "Spanish origin, fresh and fruity, with notes of citrus and stone fruits.",
-    price: "£7.50 | £24.50"
+    name: "Alcanta White",
+    description: "Alicante, Spain. A sun-kissed whisper of citrus and gentle blooms.",
+    price: "£8 | £28"
   },
   {
     category: "White Wine",
-    name: "Verdejo, Mesta",
-    description: "Spanish origin, crisp and aromatic, with notes of herbs and pineapple.",
-    price: "£7.50 | £24.50"
-  },
-  {
-    category: "White Wine",
-    name: "Albariño, Rias Baixas",
-    description: "Rich and vibrant with aromas of citrus fruit and melon. Well balanced with a long, clean finish.",
-    price: "£28"
-  },
-  {
-    category: "White Wine",
-    name: "Falanghina Terre di chieti",
-    description: "Italian origin, crisp and aromatic, with notes of herbs and ripe fruit.",
-    price: "£26.50"
-  },
-  {
-    category: "White Wine",
-    name: "Rioja Blanco, Valdebaron",
-    description: "Spanish origin, crisp and aromatic, with notes of herbs and ripe melon.",
-    price: "£26.50"
+    name: "Arca de Noé White",
+    description: "Rioja, Spain. Elegant and crisp, like morning dew on orchard fruits.",
+    price: "£8.50 | £30"
   },
   {
     category: "White Wine",
     name: "Pinot Grigio",
-    description: "Italian origin, crisp and aromatic, easy to drink with an intense floaral and citrus notes.",
-    price: "£7.50 | £24.50"
+    description: "Italy. Floral and citrus hints with pear and apple, balanced with a mineral finish.",
+    price: "£8.50 | £32"
   },
   {
     category: "White Wine",
-    name: "Sauvignon Blanc 'Zagara'",
-    description: "Fruity and refreshing with floral, citrus and green apple flavours balanced by ripe tropical fruit.",
+    name: "Flor de Verano",
+    description: "Rías Baixas, Spain. A refreshing ocean breeze captured in a glass.",
     price: "£30"
+  },
+  {
+    category: "White Wine",
+    name: "Goru, Jumilla",
+    description: "Spain. A bold symphony of ripe fruit and spice.",
+    price: "£31"
+  },
+  {
+    category: "White Wine",
+    name: "Dealberto Sobre Lías",
+    description: "Rueda, Spain. A creamy caress of citrus and golden apple.",
+    price: "£32"
+  },
+  {
+    category: "White Wine",
+    name: "Sauvignon ‘Zagara’ Sicily",
+    description: "Fruity and refreshing with floral, citrus, green apple, and tropical fruit notes.",
+    price: "£32"
+  },
+  {
+    category: "White Wine",
+    name: "Gavi Di Gavi ‘La Piacentina’",
+    description: "Italy. Light, fresh, mineral and citrus bouquet with crisp pear and apple notes.",
+    price: "£34"
+  },
+  {
+    category: "White Wine",
+    name: "Pecorino",
+    description: "Italy. Floral and mineral nose with pear, lemon and pepper notes.",
+    price: "£35"
   },
   // RED WINE
   {
     category: "Red Wine",
-    name: "Sangiovese Rubicone IGT",
-    description: "Italian origin, deep garnet red with violet reflections.",
-    price: "£7.50 | £24.50"
-  },
-  {
-    category: "Red Wine",
-    name: "Monstrell, Campules",
-    description: "Spanish origin, black fruit and spicy overtones.",
-    price: "£7.50 | £24.50"
-  },
-  {
-    category: "Red Wine",
-    name: "Garnacha, Dama D Roca",
-    description: "Spanish origin, dark cherry, leather and gentle vanilla.",
-    price: "£7.50 | £24.50"
-  },
-  {
-    category: "Red Wine",
-    name: "Tempranillo, Mesta",
-    description: "Spanish origin, traditional, fruity and smooth with a modern, well-rounded finish.",
-    price: "£7.50 | £24.50"
-  },
-  {
-    category: "Red Wine",
-    name: "Nero d'Avola 'Forriero",
-    description: "Italian origin, ruby red with violet reflections. Soft and balanced with concentrated fruit and jam aromas.",
-    price: "£8.70 | £26.50"
-  },
-  {
-    category: "Red Wine",
-    name: "Rioja Crianza, Hugonell",
-    description: "Spanish origin, traditional and savoury Rioja blend of ripe strawberry fruit and vanilla. ",
-    price: "£8.95 | £29.95"
-  },
-  {
-    category: "Red Wine",
-    name: "Chianti Classico DDCG",
-    description: "Italian origin, a sanglovese blend with a fresh and fruity character.",
-    price: "£26.50"
-  },
-  {
-    category: "Red Wine",
     name: "Merlot di Sicilia",
-    description: "Italian origin, dark and intense. ",
+    description: "Sicily. Full-bodied with moderate acidity, smooth and elegant with dark intense flavours.",
+    price: "£7.50 | £26"
+  },
+  {
+    category: "Red Wine",
+    name: "Sangiovese Rubicone IGT",
+    description: "Emilia-Romagna, Italy. Ripe red fruits, pleasant acidity, and a clean finish.",
+    price: "£7.50 | £26"
+  },
+  {
+    category: "Red Wine",
+    name: "Alcanta Cab Sauv",
+    description: "Alicante, Spain. Rich and velvety with dark fruits and a hint of spice.",
+    price: "£8 | £28"
+  },
+  {
+    category: "Red Wine",
+    name: "Alabando",
+    description: "Alicante, Spain. Juicy and vibrant with a playful hint of red berries.",
+    price: "£8.50 | £30"
+  },
+  {
+    category: "Red Wine",
+    name: "Hacienda Albae Malbec",
+    description: "Castilla, Spain. Deep and generous with plum and dark chocolate notes.",
+    price: "£9.50 | £32"
+  },
+  {
+    category: "Red Wine",
+    name: "Nero d’Avola ‘Forriero’",
+    description: "Sicily. Bold with dark fruit, spice, firm tannins and slight earthiness.",
+    price: "£9.50 | £34"
+  },
+  {
+    category: "Red Wine",
+    name: "Ondalán Crianza",
+    description: "Rioja, Spain. Elegant with red fruits and subtle oak.",
     price: "£30"
+  },
+  {
+    category: "Red Wine",
+    name: "Chianti Classico DOCG",
+    description: "Tuscany, Italy. Fresh and fruity Sangiovese blend with added richness from Merlot.",
+    price: "£32"
+  },
+  {
+    category: "Red Wine",
+    name: "Primitivo Manduria Pacato",
+    description: "Italy. Intense with mature fruit, spice, and a complex persistent finish.",
+    price: "£35"
+  },
+  {
+    category: "Red Wine",
+    name: "Talento",
+    description: "Jumilla, Spain. Bold with black fruits and gentle spice.",
+    price: "£35"
   },
 
   // ROSÉ & SANGRIA
   {
-    category: "Rosé and Sangria",
+    category: "Rosé Wine",
     name: "Rosado Novementi",
-    description: "Italian origin, elegant, light and tasty with good acidity.",
-    price: "£7.50 | £27.50"
+    description: "Puglia, Italy. A vibrant rosé with strawberry, raspberry, pink grapefruit and sage notes. Round and fresh with a long finish.",
+    price: "£7.50 | £25"
   },
   {
-    category: "Rosé and Sangria",
-    name: "Monastrell Rosé Campules La Pelirroja",
-    description: "Spanish origin, redcurrant and raspberry aromas. Balanced and fruity. Great as an aperitif.",
-    price: "£18.50"
+    category: "Rosé Wine",
+    name: "Viba Blush",
+    description: "Extremadura, Spain. A delicate blush of summer berries and soft floral notes.",
+    price: "£28"
   },
   {
-    category: "Rosé and Sangria",
-    name: "Sangria (House)",
-    description: "Glass or carafe.",
+    category: "Sangria",
+    name: "House Sangria",
+    description: "Classic house-made sangria.",
     price: "£7 | £26"
   },
 
   // SPARKLING & CHAMPAGNE
   {
-    category: "Sparkling and Champagne",
-    name: "Cava Brut & Selection",
-    description: "Classic Spanish sparkling wine.",
-    price: "£7 | £24.50"
+    category: "Sparkling Wine",
+    name: "Cava Brut & Seleccion",
+    description: "Catalonia, Spain. Classic sparkling wine, crisp and refreshing.",
+    price: "£7 | £28"
   },
   {
-    category: "Sparkling and Champagne",
-    name: "Prosecco Brut 'Perla Nera",
-    description: "Aromatic with hints of flowers and banana. Fruity and well balanced.",
-    price: "£7 | £26"
+    category: "Sparkling Wine",
+    name: "Prosecco Brut ‘Perla Nera’",
+    description: "Italy. Aromatic with floral notes and hints of banana, fruity and well-balanced.",
+    price: "£7 | £28"
   }
 ];
