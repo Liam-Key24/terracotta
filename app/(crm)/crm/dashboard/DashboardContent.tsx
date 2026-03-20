@@ -90,6 +90,13 @@ export function DashboardContent() {
                     action: 'approve',
                     queueId: drawerEntry.id,
                     tableIds: selectedTableIds,
+                    entryName: drawerEntry.name,
+                    entryEmail: drawerEntry.email,
+                    entryPhone: drawerEntry.phone,
+                    entryGuests: drawerEntry.guests,
+                    entryNotes: drawerEntry.notes,
+                    entryDate: drawerEntry.date,
+                    entryTime: drawerEntry.time,
                 }),
             });
             const data = await response.json().catch(() => ({}));
