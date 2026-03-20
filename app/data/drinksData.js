@@ -31,7 +31,9 @@ export const drinksData = [
     id: 'rose-sangria',
     title: 'Rosé & Sangria',
     items: wineListData
-      .filter(item => item.category === "Rosé and Sangria")
+      .filter(
+        (item) => item.category === "Rosé and Sangria" || item.category === "Rosé Wine" || item.category === "Sangria"
+      )
       .map(item => ({ name: item.name, price: item.price })),
     imagePath: "/assets/menu/sangria.jpg",
     imageHeight: "30vh",
@@ -44,7 +46,9 @@ export const drinksData = [
     id: 'sparkling-champagne',
     title: 'Sparkling & Champagne',
     items: wineListData
-      .filter(item => item.category === "Sparkling and Champagne")
+      .filter(
+        (item) => item.category === "Sparkling and Champagne" || item.category === "Sparkling Wine"
+      )
       .map(item => ({ name: item.name, price: item.price })),
     imagePath: "/assets/menu/spark-wine.jpg",
     imageHeight: "30vh",
