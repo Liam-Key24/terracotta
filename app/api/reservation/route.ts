@@ -7,7 +7,7 @@ import { addToQueue, countQueueForSlot } from './_queue';
 import { sendSlotFullEmail } from './sendConfirmationEmail';
 import { signConfirmationToken } from './_confirmToken';
 import { countForSlot } from './_store';
-import { isUpstashConfigured } from './_upstash';
+import { formatRedisErrorForClient, isUpstashConfigured } from './_upstash';
 
 // HTML Email Template for Owner
 const reservationEmailTemplate = (formData: {
@@ -381,8 +381,8 @@ export async function POST(request: NextRequest) {
                 console.error('[reservation] Queue persist failed (Upstash):', err);
                 return NextResponse.json(
                     {
-                        error:
-                            'Could not save your booking to the database. Check UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (no extra spaces or quotes).',
+                        error: 'Could not save your booking to the database.',
+                        detail: formatRedisErrorForClient(err),
                     },
                     { status: 503 }
                 );

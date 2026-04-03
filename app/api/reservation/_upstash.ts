@@ -6,19 +6,29 @@ const KEY_QUEUE = 'tc:queue';
 const KEY_ALT = 'tc:alternatives';
 
 let client: Redis | null = null;
+let clientCredentialsKey = '';
 
 function trimmedEnv(value: string | undefined): string | undefined {
     const t = value?.trim();
     return t && t.length > 0 ? t : undefined;
 }
 
-function getRedis(): Redis | null {
+/** Upstash REST URL + token only (`UPSTASH_REDIS_REST_*`). */
+function redisCredentials(): { url: string; token: string } | null {
     const url = trimmedEnv(process.env.UPSTASH_REDIS_REST_URL);
     const token = trimmedEnv(process.env.UPSTASH_REDIS_REST_TOKEN);
-    if (!url || !token) return null;
-    if (!client) {
-        // Values are JSON strings from JSON.stringify; disable auto-parse on GET.
-        client = new Redis({ url, token, automaticDeserialization: false });
+    if (url && token) return { url, token };
+    return null;
+}
+
+function getRedis(): Redis | null {
+    const cred = redisCredentials();
+    if (!cred) return null;
+
+    const key = `${cred.url}\0${cred.token}`;
+    if (!client || clientCredentialsKey !== key) {
+        client = new Redis({ url: cred.url, token: cred.token, automaticDeserialization: false });
+        clientCredentialsKey = key;
     }
     return client;
 }
@@ -39,9 +49,9 @@ function coerceToJsonString(value: unknown): string | null {
     return null;
 }
 
-/** True when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (trimmed). */
+/** True when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are both set (trimmed). */
 export function isUpstashConfigured(): boolean {
-    return Boolean(trimmedEnv(process.env.UPSTASH_REDIS_REST_URL) && trimmedEnv(process.env.UPSTASH_REDIS_REST_TOKEN));
+    return redisCredentials() !== null;
 }
 
 const SET_RETRIES = 3;
@@ -123,4 +133,16 @@ export async function upstashGetAlternativesJson(): Promise<string | null> {
 
 export async function upstashSetAlternativesJson(json: string): Promise<void> {
     await setJsonKey(KEY_ALT, json);
+}
+
+/** Safe snippet for API responses (no secrets). */
+export function formatRedisErrorForClient(err: unknown): string {
+    const message = err instanceof Error ? err.message : String(err);
+    if (/WRONGPASS|unauthorized|401/i.test(message)) {
+        return 'Redis rejected the token. Confirm UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN match the same Upstash database (REST token).';
+    }
+    if (/payload too large|max.*size|ERR string exceeds/i.test(message)) {
+        return 'Queue data is too large for Redis; clear old waitlist entries or contact support.';
+    }
+    return message.length > 220 ? `${message.slice(0, 220)}…` : message;
 }
