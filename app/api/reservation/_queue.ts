@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getDataDir } from './_dataDir';
 import { getRetentionCutoffMs } from './_retention';
+import { isUpstashConfigured, upstashGetQueueJson, upstashSetQueueJson } from './_upstash';
 
 export type QueueEntry = {
     id: string;
@@ -19,7 +20,7 @@ function getQueuePath(): string {
     return join(getDataDir(), 'reservation-queue.json');
 }
 
-function readQueue(): QueueEntry[] {
+function readQueueFromFile(): QueueEntry[] {
     const path = getQueuePath();
     try {
         if (!existsSync(path)) return [];
@@ -28,51 +29,95 @@ function readQueue(): QueueEntry[] {
         const list = Array.isArray(data) ? data : [];
         const cutoffMs = getRetentionCutoffMs();
         const kept = list.filter((e) => new Date(e.addedAt).getTime() >= cutoffMs);
-        if (kept.length < list.length) writeQueue(kept);
+        if (kept.length < list.length) writeQueueFile(kept);
         return kept;
     } catch {
         return [];
     }
 }
 
-function writeQueue(entries: QueueEntry[]): void {
+function writeQueueFile(entries: QueueEntry[]): void {
     const path = getQueuePath();
     const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(entries, null, 2), 'utf-8');
 }
 
-export function listQueue(): QueueEntry[] {
-    return readQueue();
+function applyQueueRetention(list: QueueEntry[]): QueueEntry[] {
+    const cutoffMs = getRetentionCutoffMs();
+    return list.filter((e) => new Date(e.addedAt).getTime() >= cutoffMs);
+}
+
+async function persistQueue(entries: QueueEntry[]): Promise<void> {
+    const kept = applyQueueRetention(entries);
+    writeQueueFile(kept);
+    if (isUpstashConfigured()) {
+        await upstashSetQueueJson(JSON.stringify(kept));
+    }
+}
+
+/** KV when configured; otherwise local `data/` (or `/tmp` on Vercel without KV). */
+export async function loadQueue(): Promise<QueueEntry[]> {
+    if (!isUpstashConfigured()) {
+        return readQueueFromFile();
+    }
+
+    const raw = await upstashGetQueueJson();
+    if (raw) {
+        try {
+            const list = JSON.parse(raw) as QueueEntry[];
+            if (Array.isArray(list)) {
+                const kept = applyQueueRetention(list);
+                if (kept.length < list.length) {
+                    await persistQueue(kept);
+                }
+                return kept;
+            }
+        } catch {
+            /* fall through */
+        }
+    }
+
+    const file = readQueueFromFile();
+    if (file.length > 0) {
+        await upstashSetQueueJson(JSON.stringify(file));
+    }
+    return file;
+}
+
+export async function listQueue(): Promise<QueueEntry[]> {
+    return loadQueue();
 }
 
 function slotKey(date: string, time: string): string {
     return `${String(date).trim()}|${String(time).trim()}`;
 }
 
-/** Count queue entries for the same date and time slot (for capacity limit). */
-export function countQueueForSlot(date: string, time: string): number {
+export async function countQueueForSlot(date: string, time: string): Promise<number> {
     const key = slotKey(date, time);
-    return readQueue().filter((e) => slotKey(e.date, e.time) === key).length;
+    const queue = await loadQueue();
+    return queue.filter((e) => slotKey(e.date, e.time) === key).length;
 }
 
-export function addToQueue(entry: QueueEntry): { added: boolean; error?: string } {
-    const queue = readQueue();
+export async function addToQueue(entry: QueueEntry): Promise<{ added: boolean; error?: string }> {
+    const queue = await loadQueue();
     if (queue.some((e) => e.id === entry.id)) {
         return { added: false, error: 'Already in queue' };
     }
     queue.push(entry);
-    writeQueue(queue);
+    await persistQueue(queue);
     return { added: true };
 }
 
-export function removeFromQueue(id: string): boolean {
-    const queue = readQueue().filter((e) => e.id !== id);
-    if (queue.length === readQueue().length) return false;
-    writeQueue(queue);
+export async function removeFromQueue(id: string): Promise<boolean> {
+    const queue = await loadQueue();
+    const next = queue.filter((e) => e.id !== id);
+    if (next.length === queue.length) return false;
+    await persistQueue(next);
     return true;
 }
 
-export function getQueueEntryById(id: string): QueueEntry | null {
-    return readQueue().find((e) => e.id === id) ?? null;
+export async function getQueueEntryById(id: string): Promise<QueueEntry | null> {
+    const queue = await loadQueue();
+    return queue.find((e) => e.id === id) ?? null;
 }

@@ -327,8 +327,8 @@ export async function POST(request: NextRequest) {
 
         // Hard cap: max 5 bookings per date+time (confirmed + queue). 6th gets "booking not made" email.
         const MAX_PER_SLOT = 5;
-        const confirmedCount = countForSlot(formData.date, formData.time);
-        const queueCount = countQueueForSlot(formData.date, formData.time);
+        const confirmedCount = await countForSlot(formData.date, formData.time);
+        const queueCount = await countQueueForSlot(formData.date, formData.time);
         if (confirmedCount + queueCount >= MAX_PER_SLOT) {
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? '';
             if (!baseUrl) {
@@ -355,7 +355,7 @@ export async function POST(request: NextRequest) {
         // Add to CRM queue so it appears in the CRM for approval (best-effort; may fail on read-only fs e.g. serverless)
         const queueId = `res-${randomUUID()}`;
         try {
-            const queueResult = addToQueue({
+            const queueResult = await addToQueue({
                 id: queueId,
                 name: formData.name,
                 email: formData.email,

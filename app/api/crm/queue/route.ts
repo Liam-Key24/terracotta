@@ -48,7 +48,7 @@ function debugLog(hypothesisId: string, message: string, data: Record<string, un
 export async function GET(request: NextRequest) {
     const auth = requireCrm(request);
     if (auth instanceof NextResponse) return auth;
-    const queue = listQueue();
+    const queue = await listQueue();
     return NextResponse.json(queue);
 }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const queueId = typeof o.queueId === 'string' ? o.queueId : '';
 
     if (!queueId) return NextResponse.json({ error: 'Missing queueId' }, { status: 400 });
-    let entry = getQueueEntryById(queueId);
+    let entry = await getQueueEntryById(queueId);
 
     if (action === 'approve') {
         if (!entry) {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         }
         if (!entry) return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
         const tableIds = Array.isArray(o.tableIds) ? (o.tableIds as string[]).filter((t) => typeof t === 'string') : undefined;
-        const result = addReservation(entry.id, {
+        const result = await addReservation(entry.id, {
             name: entry.name,
             email: entry.email,
             phone: entry.phone,
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         if (!result.success) {
             return NextResponse.json({ error: result.error ?? 'Slot full' }, { status: 400 });
         }
-        removeFromQueue(entry.id);
+        await removeFromQueue(entry.id);
         try {
             await sendConfirmationEmail({
                 name: entry.name,
@@ -106,10 +106,10 @@ export async function POST(request: NextRequest) {
     if (action === 'reject' || action === 'delete') {
         // Treat missing queue records as already-removed so CRM delete stays idempotent.
         if (!entry) {
-            removeFromQueue(queueId);
+            await removeFromQueue(queueId);
             return NextResponse.json({ ok: true });
         }
-        removeFromQueue(entry.id);
+        await removeFromQueue(entry.id);
         return NextResponse.json({ ok: true });
     }
 
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing suggestedDate or suggestedTime' }, { status: 400 });
         }
         try {
-            const token = createAlternative({
+            const token = await createAlternative({
                 name: entry.name,
                 email: entry.email,
                 phone: entry.phone,
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
                 suggestedTime,
                 suggestedTableIds: suggestedTableIds?.length ? suggestedTableIds : undefined,
             });
-            removeFromQueue(entry.id);
+            await removeFromQueue(entry.id);
             if (!BASE_URL) {
                 debugLog('A4', 'suggest-alternative missing BASE_URL', { queueId });
                 return NextResponse.json({ error: 'Server configuration error (NEXT_PUBLIC_BASE_URL missing)' }, { status: 503 });

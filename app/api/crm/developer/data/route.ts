@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { getCrmSession } from '../../requireAuth';
 import { getMergedReservations, listReservationCancellations } from '../../../reservation/_store';
 import { listQueue } from '../../../reservation/_queue';
+import { listAlternatives } from '../../../reservation/_alternatives';
 
 const REVEAL_SECRET = process.env.CRM_SECRET || process.env.ADMIN_SECRET || '';
 
@@ -42,9 +43,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Reveal required' }, { status: 403 });
     }
     const reservations = await getMergedReservations();
-    const cancellations = listReservationCancellations();
-    const queue = listQueue();
-    const alternatives = readJsonFile('reservation-alternatives.json');
+    const cancellations = await listReservationCancellations();
+    const queue = await listQueue();
+    const alternatives = await listAlternatives();
     const tables = readJsonFile('tables.json');
     const response = NextResponse.json(
         { reservations, cancellations, queue, alternatives, tables },

@@ -97,7 +97,8 @@ export function useFloorPlanData(selectedDate: string): UseFloorPlanDataResult {
             setAssignmentError(null);
 
             try {
-                const response = await fetch(`/api/crm/reservations/${reservation.id}`, {
+                const idPath = encodeURIComponent(reservation.id);
+                const response = await fetch(`/api/crm/reservations/${idPath}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ tableIds: nextTableIds }),

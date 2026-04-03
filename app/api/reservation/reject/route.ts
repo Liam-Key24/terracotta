@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const entry = getQueueEntryById(queueId);
+    const entry = await getQueueEntryById(queueId);
     console.log('[reservation/reject] queue lookup', { queueId, foundEntry: Boolean(entry) });
     // #region agent log
     debugLog('H7', 'reject queue lookup result', { queueId, foundEntry: Boolean(entry) });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCrm } from '../../requireAuth';
-import { updateReservation, countForSlot, getReservationById } from '../../../reservation/_store';
+import { countForSlot, getMergedReservationById, updateReservation } from '../../../reservation/_store';
 
 export async function PATCH(
     request: NextRequest,
@@ -39,17 +39,18 @@ export async function PATCH(
         patch.notes = notes;
     }
 
-    const existing = getReservationById(id);
+    const existing = await getMergedReservationById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const newDate = patch.date ?? existing.date;
     const newTime = patch.time ?? existing.time;
-    const count = countForSlot(newDate, newTime);
+    const count = await countForSlot(newDate, newTime);
     const alreadyInSlot = existing.date === newDate && existing.time === newTime;
     if (!alreadyInSlot && count >= 5) {
         return NextResponse.json({ error: 'Time slot full' }, { status: 400 });
     }
 
-    const updated = updateReservation(id, patch);
+    const updated = await updateReservation(id, patch);
+    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(updated);
 }

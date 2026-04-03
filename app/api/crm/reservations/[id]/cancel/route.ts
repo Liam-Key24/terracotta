@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCrm } from '../../../requireAuth';
-import { cancelReservationWithKvFallback, getMergedReservations } from '../../../../reservation/_store';
+import { cancelReservation, getMergedReservations } from '../../../../reservation/_store';
 
 export async function POST(
     request: NextRequest,
@@ -25,7 +25,7 @@ export async function POST(
         return NextResponse.json({ error: 'Cancellation reason is required' }, { status: 400 });
     }
 
-    let result = await cancelReservationWithKvFallback(id, reason);
+    let result = await cancelReservation(id, reason);
     if (!result.success && result.error === 'Reservation not found') {
         // Fallback for records created through alternative-confirmation flows where ID mismatch can occur across instances.
         const fallbackName = typeof o.name === 'string' ? o.name.trim() : '';
@@ -44,7 +44,7 @@ export async function POST(
                 return true;
             });
             if (candidate) {
-                result = await cancelReservationWithKvFallback(candidate.id, reason);
+                result = await cancelReservation(candidate.id, reason);
             }
         }
     }

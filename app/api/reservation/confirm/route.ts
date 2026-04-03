@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
 
         // Approve-from-email flow: token includes queueId → add to reservations, remove from queue, email guest
         if (queueIdFromToken) {
-            let entry: QueueEntry | null = getQueueEntryById(queueIdFromToken);
+            let entry: QueueEntry | null = await getQueueEntryById(queueIdFromToken);
             console.log('[reservation/confirm] queue lookup', { queueIdFromToken, foundQueueEntry: Boolean(entry) });
             // #region agent log
             debugLog('H2', 'confirm queue lookup result', { queueIdFromToken, foundQueueEntry: Boolean(entry) });
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
                     addedAt: new Date().toISOString(),
                 };
             }
-            const result = addReservation(entry.id, {
+            const result = await addReservation(entry.id, {
                 name: entry.name,
                 email: entry.email,
                 phone: entry.phone,
@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
                     { status: 400, headers: { 'Content-Type': 'text/html' } }
                 );
             }
-            removeFromQueue(queueIdFromToken);
+            await removeFromQueue(queueIdFromToken);
             console.log('[reservation/confirm] removeFromQueue called', { queueIdFromToken });
             // #region agent log
             debugLog('H4', 'confirm queue removal attempted', { queueIdFromToken });
@@ -358,8 +358,8 @@ export async function GET(request: NextRequest) {
         };
 
         const id = confirmationId(token);
-        const inQueue = listQueue().some((e) => e.id === id);
-        const inReservations = getAllReservations().some((r) => r.id === id);
+        const inQueue = (await listQueue()).some((e) => e.id === id);
+        const inReservations = (await getAllReservations()).some((r) => r.id === id);
         if (inQueue || inReservations) {
             return new NextResponse(successPage('Already processed', safeFormData), {
                 status: 200,
@@ -367,7 +367,7 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const { added } = addToQueue({
+        const { added } = await addToQueue({
             id,
             name: safeFormData.name,
             email: safeFormData.email,

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing name, date or time' }, { status: 400 });
     }
     const id = createHash('sha256').update(`${Date.now()}-${name}-${email}`).digest('hex');
-    const result = addReservation(id, {
+    const result = await addReservation(id, {
         name,
         email,
         phone,
