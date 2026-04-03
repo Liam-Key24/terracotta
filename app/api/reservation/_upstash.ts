@@ -7,9 +7,14 @@ const KEY_ALT = 'tc:alternatives';
 
 let client: Redis | null = null;
 
+function trimmedEnv(value: string | undefined): string | undefined {
+    const t = value?.trim();
+    return t && t.length > 0 ? t : undefined;
+}
+
 function getRedis(): Redis | null {
-    const url = process.env.UPSTASH_REDIS_REST_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    const url = trimmedEnv(process.env.UPSTASH_REDIS_REST_URL);
+    const token = trimmedEnv(process.env.UPSTASH_REDIS_REST_TOKEN);
     if (!url || !token) return null;
     if (!client) {
         // Values are JSON strings from JSON.stringify; disable auto-parse on GET.
@@ -34,9 +39,30 @@ function coerceToJsonString(value: unknown): string | null {
     return null;
 }
 
-/** True when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set. */
+/** True when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (trimmed). */
 export function isUpstashConfigured(): boolean {
-    return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+    return Boolean(trimmedEnv(process.env.UPSTASH_REDIS_REST_URL) && trimmedEnv(process.env.UPSTASH_REDIS_REST_TOKEN));
+}
+
+const SET_RETRIES = 3;
+const SET_RETRY_MS = [80, 200];
+
+async function setJsonKey(key: string, json: string): Promise<void> {
+    const redis = getRedis();
+    if (!redis) return;
+    let last: unknown;
+    for (let attempt = 0; attempt < SET_RETRIES; attempt++) {
+        try {
+            await redis.set(key, json);
+            return;
+        } catch (e) {
+            last = e;
+            if (attempt < SET_RETRIES - 1) {
+                await new Promise((r) => setTimeout(r, SET_RETRY_MS[attempt] ?? 300));
+            }
+        }
+    }
+    throw last;
 }
 
 export async function upstashGetReservationsJson(): Promise<string | null> {
@@ -51,9 +77,7 @@ export async function upstashGetReservationsJson(): Promise<string | null> {
 }
 
 export async function upstashSetReservationsJson(json: string): Promise<void> {
-    const redis = getRedis();
-    if (!redis) return;
-    await redis.set(KEY_RES, json);
+    await setJsonKey(KEY_RES, json);
 }
 
 export async function upstashGetCancellationsJson(): Promise<string | null> {
@@ -68,9 +92,7 @@ export async function upstashGetCancellationsJson(): Promise<string | null> {
 }
 
 export async function upstashSetCancellationsJson(json: string): Promise<void> {
-    const redis = getRedis();
-    if (!redis) return;
-    await redis.set(KEY_CANCEL, json);
+    await setJsonKey(KEY_CANCEL, json);
 }
 
 export async function upstashGetQueueJson(): Promise<string | null> {
@@ -85,9 +107,7 @@ export async function upstashGetQueueJson(): Promise<string | null> {
 }
 
 export async function upstashSetQueueJson(json: string): Promise<void> {
-    const redis = getRedis();
-    if (!redis) return;
-    await redis.set(KEY_QUEUE, json);
+    await setJsonKey(KEY_QUEUE, json);
 }
 
 export async function upstashGetAlternativesJson(): Promise<string | null> {
@@ -102,7 +122,5 @@ export async function upstashGetAlternativesJson(): Promise<string | null> {
 }
 
 export async function upstashSetAlternativesJson(json: string): Promise<void> {
-    const redis = getRedis();
-    if (!redis) return;
-    await redis.set(KEY_ALT, json);
+    await setJsonKey(KEY_ALT, json);
 }

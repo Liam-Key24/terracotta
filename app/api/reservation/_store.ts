@@ -131,7 +131,11 @@ export async function loadReservations(): Promise<ReservationRecord[]> {
             if (Array.isArray(list)) {
                 const kept = applyReservationDateRetention(list);
                 if (kept.length < list.length) {
-                    await persistReservations(kept);
+                    try {
+                        await persistReservations(kept);
+                    } catch (err) {
+                        console.error('[reservations] Upstash retention sync failed:', err);
+                    }
                 }
                 if (kept.length > 0) {
                     return kept;
@@ -144,7 +148,11 @@ export async function loadReservations(): Promise<ReservationRecord[]> {
 
     const file = readReservationsFromFile();
     if (file.length > 0) {
-        await upstashSetReservationsJson(JSON.stringify(file));
+        try {
+            await upstashSetReservationsJson(JSON.stringify(file));
+        } catch (err) {
+            console.error('[reservations] Upstash seed from file failed:', err);
+        }
     }
     return file;
 }
@@ -161,7 +169,11 @@ async function loadCancellations(): Promise<ReservationCancellationRecord[]> {
             if (Array.isArray(list)) {
                 const kept = applyCancellationRetention(list);
                 if (kept.length < list.length) {
-                    await persistCancellations(kept);
+                    try {
+                        await persistCancellations(kept);
+                    } catch (err) {
+                        console.error('[cancellations] Upstash retention sync failed:', err);
+                    }
                 }
                 if (kept.length > 0) {
                     return kept;
@@ -174,7 +186,11 @@ async function loadCancellations(): Promise<ReservationCancellationRecord[]> {
 
     const file = readCancellationsFromFile();
     if (file.length > 0) {
-        await upstashSetCancellationsJson(JSON.stringify(file));
+        try {
+            await upstashSetCancellationsJson(JSON.stringify(file));
+        } catch (err) {
+            console.error('[cancellations] Upstash seed from file failed:', err);
+        }
     }
     return file;
 }

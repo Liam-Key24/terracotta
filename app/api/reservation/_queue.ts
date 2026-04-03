@@ -69,7 +69,11 @@ export async function loadQueue(): Promise<QueueEntry[]> {
             if (Array.isArray(list)) {
                 const kept = applyQueueRetention(list);
                 if (kept.length < list.length) {
-                    await persistQueue(kept);
+                    try {
+                        await persistQueue(kept);
+                    } catch (err) {
+                        console.error('[queue] Upstash retention sync failed (continuing with in-memory list):', err);
+                    }
                 }
                 // Empty `[]` in Redis must not block reading local file (e.g. SET failed earlier on serverless).
                 if (kept.length > 0) {
@@ -83,7 +87,11 @@ export async function loadQueue(): Promise<QueueEntry[]> {
 
     const file = readQueueFromFile();
     if (file.length > 0) {
-        await upstashSetQueueJson(JSON.stringify(file));
+        try {
+            await upstashSetQueueJson(JSON.stringify(file));
+        } catch (err) {
+            console.error('[queue] Upstash seed from file failed:', err);
+        }
     }
     return file;
 }

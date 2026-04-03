@@ -72,7 +72,11 @@ export async function loadAlternatives(): Promise<AlternativeEntry[]> {
             if (Array.isArray(list)) {
                 const kept = applyAlternativesRetention(list);
                 if (kept.length < list.length) {
-                    await persistAlternatives(kept);
+                    try {
+                        await persistAlternatives(kept);
+                    } catch (err) {
+                        console.error('[alternatives] Upstash retention sync failed:', err);
+                    }
                 }
                 if (kept.length > 0) {
                     return kept;
@@ -85,7 +89,11 @@ export async function loadAlternatives(): Promise<AlternativeEntry[]> {
 
     const file = readAlternativesFromFile();
     if (file.length > 0) {
-        await upstashSetAlternativesJson(JSON.stringify(file));
+        try {
+            await upstashSetAlternativesJson(JSON.stringify(file));
+        } catch (err) {
+            console.error('[alternatives] Upstash seed from file failed:', err);
+        }
     }
     return file;
 }

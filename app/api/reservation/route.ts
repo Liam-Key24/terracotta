@@ -368,11 +368,22 @@ export async function POST(request: NextRequest) {
         };
 
         if (isUpstashConfigured()) {
-            const queueResult = await addToQueue(queueEntry);
-            if (!queueResult.added) {
-                console.error('[reservation] Queue add rejected:', queueResult.error);
+            try {
+                const queueResult = await addToQueue(queueEntry);
+                if (!queueResult.added) {
+                    console.error('[reservation] Queue add rejected:', queueResult.error);
+                    return NextResponse.json(
+                        { error: 'Could not save your booking for review. Please try again in a moment.' },
+                        { status: 503 }
+                    );
+                }
+            } catch (err) {
+                console.error('[reservation] Queue persist failed (Upstash):', err);
                 return NextResponse.json(
-                    { error: 'Could not save your booking for review. Please try again in a moment.' },
+                    {
+                        error:
+                            'Could not save your booking to the database. Check UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (no extra spaces or quotes).',
+                    },
                     { status: 503 }
                 );
             }
