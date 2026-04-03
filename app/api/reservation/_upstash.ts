@@ -18,11 +18,6 @@ function getRedis(): Redis | null {
     return client;
 }
 
-function logSetFailure(key: string, err: unknown): void {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[upstash] SET ${key} failed:`, msg);
-}
-
 /** REST responses may return a string blob or an already-parsed object — normalize to a JSON string. */
 function coerceToJsonString(value: unknown): string | null {
     if (value == null) return null;
@@ -58,11 +53,7 @@ export async function upstashGetReservationsJson(): Promise<string | null> {
 export async function upstashSetReservationsJson(json: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
-    try {
-        await redis.set(KEY_RES, json);
-    } catch (err) {
-        logSetFailure(KEY_RES, err);
-    }
+    await redis.set(KEY_RES, json);
 }
 
 export async function upstashGetCancellationsJson(): Promise<string | null> {
@@ -79,11 +70,7 @@ export async function upstashGetCancellationsJson(): Promise<string | null> {
 export async function upstashSetCancellationsJson(json: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
-    try {
-        await redis.set(KEY_CANCEL, json);
-    } catch (err) {
-        logSetFailure(KEY_CANCEL, err);
-    }
+    await redis.set(KEY_CANCEL, json);
 }
 
 export async function upstashGetQueueJson(): Promise<string | null> {
@@ -100,11 +87,7 @@ export async function upstashGetQueueJson(): Promise<string | null> {
 export async function upstashSetQueueJson(json: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
-    try {
-        await redis.set(KEY_QUEUE, json);
-    } catch (err) {
-        logSetFailure(KEY_QUEUE, err);
-    }
+    await redis.set(KEY_QUEUE, json);
 }
 
 export async function upstashGetAlternativesJson(): Promise<string | null> {
@@ -121,9 +104,5 @@ export async function upstashGetAlternativesJson(): Promise<string | null> {
 export async function upstashSetAlternativesJson(json: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
-    try {
-        await redis.set(KEY_ALT, json);
-    } catch (err) {
-        logSetFailure(KEY_ALT, err);
-    }
+    await redis.set(KEY_ALT, json);
 }

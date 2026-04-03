@@ -7,6 +7,7 @@ import { addToQueue, countQueueForSlot } from './_queue';
 import { sendSlotFullEmail } from './sendConfirmationEmail';
 import { signConfirmationToken } from './_confirmToken';
 import { countForSlot } from './_store';
+import { isUpstashConfigured } from './_upstash';
 
 // HTML Email Template for Owner
 const reservationEmailTemplate = (formData: {
@@ -352,25 +353,38 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Add to CRM queue so it appears in the CRM for approval (best-effort; may fail on read-only fs e.g. serverless)
+        // Add to CRM queue before emailing. With Upstash, persist must succeed or CRM on other instances never sees the row.
         const queueId = `res-${randomUUID()}`;
-        try {
-            const queueResult = await addToQueue({
-                id: queueId,
-                name: formData.name,
-                email: formData.email,
-                phone: formData.phone,
-                date: formData.date,
-                time: formData.time,
-                guests: formData.guests,
-                ...(formData.specialRequests ? { notes: formData.specialRequests } : {}),
-                addedAt: new Date().toISOString(),
-            });
+        const queueEntry = {
+            id: queueId,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            date: formData.date,
+            time: formData.time,
+            guests: formData.guests,
+            ...(formData.specialRequests ? { notes: formData.specialRequests } : {}),
+            addedAt: new Date().toISOString(),
+        };
+
+        if (isUpstashConfigured()) {
+            const queueResult = await addToQueue(queueEntry);
             if (!queueResult.added) {
-                console.warn('[reservation] Queue add failed:', queueResult.error);
+                console.error('[reservation] Queue add rejected:', queueResult.error);
+                return NextResponse.json(
+                    { error: 'Could not save your booking for review. Please try again in a moment.' },
+                    { status: 503 }
+                );
             }
-        } catch (queueErr) {
-            console.warn('[reservation] Queue add failed (e.g. read-only filesystem):', queueErr);
+        } else {
+            try {
+                const queueResult = await addToQueue(queueEntry);
+                if (!queueResult.added) {
+                    console.warn('[reservation] Queue add failed:', queueResult.error);
+                }
+            } catch (queueErr) {
+                console.warn('[reservation] Queue add failed (e.g. read-only filesystem):', queueErr);
+            }
         }
 
         // Create transporter for sending emails
