@@ -71,7 +71,10 @@ export async function loadQueue(): Promise<QueueEntry[]> {
                 if (kept.length < list.length) {
                     await persistQueue(kept);
                 }
-                return kept;
+                // Empty `[]` in Redis must not block reading local file (e.g. SET failed earlier on serverless).
+                if (kept.length > 0) {
+                    return kept;
+                }
             }
         } catch {
             /* fall through */

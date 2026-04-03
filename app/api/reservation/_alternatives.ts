@@ -74,7 +74,9 @@ export async function loadAlternatives(): Promise<AlternativeEntry[]> {
                 if (kept.length < list.length) {
                     await persistAlternatives(kept);
                 }
-                return kept;
+                if (kept.length > 0) {
+                    return kept;
+                }
             }
         } catch {
             /* fall through */

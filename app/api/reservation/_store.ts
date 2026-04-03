@@ -133,7 +133,9 @@ export async function loadReservations(): Promise<ReservationRecord[]> {
                 if (kept.length < list.length) {
                     await persistReservations(kept);
                 }
-                return kept;
+                if (kept.length > 0) {
+                    return kept;
+                }
             }
         } catch {
             /* fall through */
@@ -161,7 +163,9 @@ async function loadCancellations(): Promise<ReservationCancellationRecord[]> {
                 if (kept.length < list.length) {
                     await persistCancellations(kept);
                 }
-                return kept;
+                if (kept.length > 0) {
+                    return kept;
+                }
             }
         } catch {
             /* fall through */

@@ -36,10 +36,17 @@ export function useDashboardData(selectedDate: string): UseDashboardDataResult {
             ]);
 
             const [reservationsData, queueData, tablesData] = await Promise.all([
-                reservationsResp.json().catch(() => []),
-                queueResp.json().catch(() => []),
-                tablesResp.json().catch(() => []),
+                reservationsResp.json().catch(() => null),
+                queueResp.json().catch(() => null),
+                tablesResp.json().catch(() => null),
             ]);
+
+            if (!reservationsResp.ok || !queueResp.ok) {
+                const parts: string[] = [];
+                if (!reservationsResp.ok) parts.push('reservations');
+                if (!queueResp.ok) parts.push('queue');
+                setLoadError(`Could not load: ${parts.join(', ')}. Check server logs / Upstash.`);
+            }
 
             setReservations(Array.isArray(reservationsData) ? (reservationsData as Reservation[]) : []);
             setQueue(Array.isArray(queueData) ? (queueData as QueueEntry[]) : []);
