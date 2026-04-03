@@ -4,6 +4,22 @@ import { useState } from 'react'
 
 // 6pm–9pm in 30 min intervals (value: 24h, label: 12h am/pm)
 const FORM_TIME_OPTIONS = [
+    { value: '10:00', label: '10:00 am' },
+    { value: '10:30', label: '10:30 am' },
+    { value: '11:00', label: '11:00 am' },
+    { value: '11:30', label: '11:30 am' },
+    { value: '12:00', label: '12:00 pm' },
+    { value: '12:30', label: '12:30 pm' },
+    { value: '13:00', label: '1:00 pm' },
+    { value: '13:30', label: '1:30 pm' },
+    { value: '14:00', label: '2:00 pm' },
+    { value: '14:30', label: '2:30 pm' },
+    { value: '15:00', label: '3:00 pm' },
+    { value: '15:30', label: '3:30 pm' },
+    { value: '16:00', label: '4:00 pm' },
+    { value: '16:30', label: '4:30 pm' },
+    { value: '17:00', label: '5:00 pm' },
+    { value: '17:30', label: '5:30 pm' },
     { value: '18:00', label: '6:00 pm' },
     { value: '18:30', label: '6:30 pm' },
     { value: '19:00', label: '7:00 pm' },
