@@ -9,6 +9,26 @@ import { signConfirmationToken } from './_confirmToken';
 import { countForSlot } from './_store';
 import { formatRedisErrorForClient, isUpstashConfigured } from './_upstash';
 
+const DEBUG_ENDPOINT = 'http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45';
+const DEBUG_RUN_ID = 'booking-db-investigation-1';
+
+function debugLog(hypothesisId: string, message: string, data: Record<string, unknown>) {
+    // #region agent log
+    fetch(DEBUG_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            runId: DEBUG_RUN_ID,
+            hypothesisId,
+            location: 'app/api/reservation/route.ts',
+            message,
+            data,
+            timestamp: Date.now(),
+        }),
+    }).catch(() => {});
+    // #endregion
+}
+
 // HTML Email Template for Owner
 const reservationEmailTemplate = (formData: {
     name: string;
@@ -330,6 +350,12 @@ export async function POST(request: NextRequest) {
         const MAX_PER_SLOT = 5;
         const confirmedCount = await countForSlot(formData.date, formData.time);
         const queueCount = await countQueueForSlot(formData.date, formData.time);
+        debugLog('H3', 'booking capacity counts evaluated', {
+            confirmedCount,
+            queueCount,
+            date: formData.date,
+            time: formData.time,
+        });
         if (confirmedCount + queueCount >= MAX_PER_SLOT) {
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? '';
             if (!baseUrl) {
@@ -367,17 +393,32 @@ export async function POST(request: NextRequest) {
             addedAt: new Date().toISOString(),
         };
 
-        if (isUpstashConfigured()) {
+        const upstashConfigured = isUpstashConfigured();
+        debugLog('H3', 'booking queue branch selected', {
+            upstashConfigured,
+            queueIdPrefix: queueId.slice(0, 8),
+        });
+
+        if (upstashConfigured) {
             try {
                 const queueResult = await addToQueue(queueEntry);
                 if (!queueResult.added) {
+                    debugLog('H3', 'booking queue add rejected', {
+                        reason: queueResult.error ?? 'unknown',
+                        queueIdPrefix: queueId.slice(0, 8),
+                    });
                     console.error('[reservation] Queue add rejected:', queueResult.error);
                     return NextResponse.json(
                         { error: 'Could not save your booking for review. Please try again in a moment.' },
                         { status: 503 }
                     );
                 }
+                debugLog('H3', 'booking queue add succeeded', { queueIdPrefix: queueId.slice(0, 8) });
             } catch (err) {
+                debugLog('H2', 'booking queue add threw error', {
+                    detail: formatRedisErrorForClient(err),
+                    queueIdPrefix: queueId.slice(0, 8),
+                });
                 console.error('[reservation] Queue persist failed (Upstash):', err);
                 return NextResponse.json(
                     {
@@ -471,6 +512,9 @@ Please confirm this reservation with the guest as soon as possible.
             { status: 200 }
         );
     } catch (error) {
+        debugLog('H2', 'booking POST fell into top-level catch', {
+            detail: formatRedisErrorForClient(error),
+        });
         console.error('Error processing reservation:', error);
         return NextResponse.json(
             { error: 'Failed to process reservation' },

@@ -4,6 +4,26 @@ import { getDataDir } from './_dataDir';
 import { getRetentionCutoffMs } from './_retention';
 import { isUpstashConfigured, upstashGetQueueJson, upstashSetQueueJson } from './_upstash';
 
+const DEBUG_ENDPOINT = 'http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45';
+const DEBUG_RUN_ID = 'booking-db-investigation-1';
+
+function debugLog(hypothesisId: string, message: string, data: Record<string, unknown>): void {
+    // #region agent log
+    fetch(DEBUG_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            runId: DEBUG_RUN_ID,
+            hypothesisId,
+            location: 'app/api/reservation/_queue.ts',
+            message,
+            data,
+            timestamp: Date.now(),
+        }),
+    }).catch(() => {});
+    // #endregion
+}
+
 export type QueueEntry = {
     id: string;
     name: string;
@@ -58,7 +78,10 @@ async function persistQueue(entries: QueueEntry[]): Promise<void> {
 
 /** KV when configured; otherwise local `data/` (or `/tmp` on Vercel without KV). */
 export async function loadQueue(): Promise<QueueEntry[]> {
-    if (!isUpstashConfigured()) {
+    const upstashConfigured = isUpstashConfigured();
+    debugLog('H3', 'loadQueue entered', { upstashConfigured });
+
+    if (!upstashConfigured) {
         return readQueueFromFile();
     }
 
@@ -77,6 +100,7 @@ export async function loadQueue(): Promise<QueueEntry[]> {
                 }
                 // Empty `[]` in Redis must not block reading local file (e.g. SET failed earlier on serverless).
                 if (kept.length > 0) {
+                    debugLog('H3', 'loadQueue using Upstash dataset', { count: kept.length });
                     return kept;
                 }
             }
@@ -93,6 +117,7 @@ export async function loadQueue(): Promise<QueueEntry[]> {
             console.error('[queue] Upstash seed from file failed:', err);
         }
     }
+    debugLog('H3', 'loadQueue using file fallback dataset', { count: file.length });
     return file;
 }
 
@@ -113,10 +138,18 @@ export async function countQueueForSlot(date: string, time: string): Promise<num
 export async function addToQueue(entry: QueueEntry): Promise<{ added: boolean; error?: string }> {
     const queue = await loadQueue();
     if (queue.some((e) => e.id === entry.id)) {
+        debugLog('H3', 'addToQueue duplicate id rejected', {
+            queueSize: queue.length,
+            idLength: entry.id.length,
+        });
         return { added: false, error: 'Already in queue' };
     }
     queue.push(entry);
     await persistQueue(queue);
+    debugLog('H3', 'addToQueue persisted successfully', {
+        queueSizeAfter: queue.length,
+        idLength: entry.id.length,
+    });
     return { added: true };
 }
 
