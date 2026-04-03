@@ -107,16 +107,18 @@ export function getReservationTone(guests: string): { container: string; meta: s
 }
 
 export function addDays(iso: string, days: number): string {
-    const d = new Date(iso + 'T00:00:00');
-    d.setDate(d.getDate() + days);
+    const [y, m, day] = iso.split('-').map(Number);
+    const d = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, day ?? 1));
+    d.setUTCDate(d.getUTCDate() + days);
     return d.toISOString().slice(0, 10);
 }
 
 export function getMonday(iso: string): string {
-    const d = new Date(iso + 'T00:00:00');
-    const day = d.getDay();
+    const [y, m, dayOfMonth] = iso.split('-').map(Number);
+    const d = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, dayOfMonth ?? 1));
+    const day = d.getUTCDay();
     const diff = day === 0 ? -6 : 1 - day;
-    d.setDate(d.getDate() + diff);
+    d.setUTCDate(d.getUTCDate() + diff);
     return d.toISOString().slice(0, 10);
 }
 

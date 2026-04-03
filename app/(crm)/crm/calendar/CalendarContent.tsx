@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getIsoDateOrFallback } from '../_shared/date';
+import { getIsoDateOrFallback, toLocalIso } from '../_shared/date';
 import { AddBookingModal } from './_components/AddBookingModal';
 import { CalendarHeader } from './_components/CalendarHeader';
 import { DayColumn } from './_components/DayColumn';
@@ -23,7 +23,7 @@ export function CalendarContent() {
     const [selected, setSelected] = useState<Reservation | null>(null);
     const [addOpen, setAddOpen] = useState(false);
 
-    const globalDate = getIsoDateOrFallback(searchParams.get('date'), new Date().toISOString().slice(0, 10));
+    const globalDate = getIsoDateOrFallback(searchParams.get('date'), toLocalIso(new Date()));
     const startDate = useMemo(() => getMonday(globalDate), [globalDate]);
 
     const [isDesktop, setIsDesktop] = useState(false);
@@ -69,7 +69,7 @@ export function CalendarContent() {
 
     const headerHeight = isDesktop ? HEADER_HEIGHT : HEADER_HEIGHT_MOBILE;
 
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = toLocalIso(new Date());
     const headerDateLabel = useMemo(() => getHeaderDateLabel(startDate), [startDate]);
     const showNowLine = displayDates.includes(todayIso);
     const [now, setNow] = useState(() => new Date());
