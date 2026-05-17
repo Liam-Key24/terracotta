@@ -20,6 +20,8 @@ function debugLog(hypothesisId: string, message: string, data: Record<string, un
     }).catch(() => {});
 }
 
+const BASE_CRM_URL = process.env.BASE_CRM_URL ?? '';
+
 const successPage = (message: string, safeFormData: { name: string; date: string; time: string; guests: string; email: string }) =>
     `<!DOCTYPE html>
 <html>
@@ -311,8 +313,14 @@ export async function GET(request: NextRequest) {
                 time: entry.time,
                 guests: entry.guests,
             };
-            const origin = request.headers.get('origin') || new URL(request.url).origin;
-            const crmUrl = `${origin}/crm`;
+            const crmUrl = BASE_CRM_URL.trim();
+            if (!crmUrl) {
+                return new NextResponse(
+                    `<!DOCTYPE html><html><head><title>Error</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;}.error{color:#dc2626;}</style></head>
+<body><h1 class="error">Server configuration error</h1><p>BASE_CRM_URL is missing.</p></body></html>`,
+                    { status: 503, headers: { 'Content-Type': 'text/html' } }
+                );
+            }
             return new NextResponse(approveSuccessPage(safeFormData, crmUrl), {
                 status: 200,
                 headers: { 'Content-Type': 'text/html' },
