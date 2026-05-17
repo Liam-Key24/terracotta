@@ -14,16 +14,13 @@ type Alternative = {
 export function ConfirmAlternativeContent() {
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
+    const isMissingToken = !token;
     const [entry, setEntry] = useState<Alternative | null>(null);
     const [status, setStatus] = useState<'loading' | 'ready' | 'confirmed' | 'error' | 'expired'>('loading');
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (!token) {
-            setStatus('error');
-            setError('Missing link');
-            return;
-        }
+        if (!token) return;
         fetch(`/api/crm/alternatives?token=${encodeURIComponent(token)}`)
             .then((r) => {
                 if (r.status === 404) {
@@ -73,6 +70,16 @@ export function ConfirmAlternativeContent() {
             </div>
         );
     }
+    if (isMissingToken) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+                <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
+                    <h1 className="text-xl font-semibold text-red-600 mb-2">Error</h1>
+                    <p className="text-slate-600">Missing link</p>
+                </div>
+            </div>
+        );
+    }
     if (status === 'expired') {
         return (
             <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
@@ -110,7 +117,7 @@ export function ConfirmAlternativeContent() {
         <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
             <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
                 <h1 className="text-xl font-semibold text-[#631732] mb-4">Confirm your booking</h1>
-                <p className="text-slate-600 mb-4">Hi {entry.name}, we'd like to offer you:</p>
+                <p className="text-slate-600 mb-4">Hi {entry.name}, we&apos;d like to offer you:</p>
                 <div className="bg-slate-50 rounded-lg p-4 mb-6">
                     <p><strong>Date:</strong> {entry.suggestedDate}</p>
                     <p><strong>Time:</strong> {entry.suggestedTime}</p>

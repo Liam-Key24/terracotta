@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { TableReservationPopup } from './TableReservationPopup';
 import { SLOTS_30 } from '../constants';
@@ -29,14 +29,14 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [selectedDate, setSelectedDate] = useState(date);
+    const [dateOverride, setDateOverride] = useState<string | null>(null);
     const [time, setTime] = useState('18:00');
     const [guests, setGuests] = useState('2');
     const [notes, setNotes] = useState('');
     const [tableIds, setTableIds] = useState<string[]>([]);
     const [previewTableId, setPreviewTableId] = useState<string | null>(null);
 
-    useEffect(() => setSelectedDate(date), [date]);
+    const selectedDate = dateOverride ?? date;
 
     const previewTable = useMemo(
         () => (previewTableId ? tables.find((table) => table.id === previewTableId) ?? null : null),
@@ -147,7 +147,7 @@ export function AddBookingModal({ date, tables, onClose, onAdd }: AddBookingModa
                             <input
                                 type="date"
                                 value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
+                                onChange={(e) => setDateOverride(e.target.value)}
                                 className="mt-1.5 w-full bg-transparent text-slate-900 outline-none"
                                 required
                             />

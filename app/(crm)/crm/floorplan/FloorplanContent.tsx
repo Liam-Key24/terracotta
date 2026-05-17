@@ -1,7 +1,7 @@
 'use client';
 
 import { ClockIcon, WarningCircleIcon } from '@phosphor-icons/react/dist/ssr';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { getIsoDateOrFallback } from '../_shared/date';
@@ -35,14 +35,14 @@ export function FloorplanContent() {
         toggleTableAssignment,
     } = useFloorPlanData(selectedDate);
 
-    const selectedTableLabel = selectedTableId ? (visualTables.get(selectedTableId)?.label ?? `Table ${selectedTableId}`) : null;
-    const selectedTableReservations = selectedTableId ? (reservationsByDisplayTable.get(selectedTableId) ?? []) : [];
-
-    useEffect(() => {
-        if (!isMobilePortrait) return;
-        setIsMenuOpen(false);
-        setSelectedTableId(null);
-    }, [isMobilePortrait]);
+    const isMenuVisible = !isMobilePortrait && isMenuOpen;
+    const activeSelectedTableId = isMobilePortrait ? null : selectedTableId;
+    const selectedTableLabel = activeSelectedTableId
+        ? (visualTables.get(activeSelectedTableId)?.label ?? `Table ${activeSelectedTableId}`)
+        : null;
+    const selectedTableReservations = activeSelectedTableId
+        ? (reservationsByDisplayTable.get(activeSelectedTableId) ?? [])
+        : [];
 
     return (
         <div className="space-y-6">
@@ -50,7 +50,7 @@ export function FloorplanContent() {
                 <FloorPlanToolbar
                     selectedDate={selectedDate}
                     reservationCount={dayReservations.length}
-                    isMenuOpen={isMenuOpen}
+                    isMenuOpen={isMenuVisible}
                     menuDisabled={isMobilePortrait}
                     onToggleMenu={() => {
                         if (isMobilePortrait) return;
@@ -92,7 +92,7 @@ export function FloorplanContent() {
 
             {!isMobilePortrait && (
                 <ReservationAssignmentMenu
-                    open={isMenuOpen}
+                    open={isMenuVisible}
                     reservations={dayReservations}
                     visualTables={visualTables}
                     savingReservationId={savingReservationId}

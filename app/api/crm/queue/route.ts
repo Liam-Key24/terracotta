@@ -5,7 +5,6 @@ import { addReservation } from '../../reservation/_store';
 import { createAlternative } from '../../reservation/_alternatives';
 import { sendAlternativeOfferEmail, sendConfirmationEmail } from '../../reservation/sendConfirmationEmail';
 
-const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
 function buildEntryFromPayload(payload: Record<string, unknown>, queueId: string) {

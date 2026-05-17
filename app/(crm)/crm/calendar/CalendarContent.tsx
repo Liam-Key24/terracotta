@@ -26,10 +26,11 @@ export function CalendarContent() {
     const globalDate = getIsoDateOrFallback(searchParams.get('date'), toLocalIso(new Date()));
     const startDate = useMemo(() => getMonday(globalDate), [globalDate]);
 
-    const [isDesktop, setIsDesktop] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(
+        () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+    );
     useEffect(() => {
         const m = window.matchMedia('(min-width: 1024px)');
-        setIsDesktop(m.matches);
         const listener = () => setIsDesktop(m.matches);
         m.addEventListener('change', listener);
         return () => m.removeEventListener('change', listener);

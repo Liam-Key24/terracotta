@@ -1,6 +1,5 @@
-import { DISPLAY_TABLE_SET } from './constants';
+import { FLOORPLAN_TABLE_LAYOUT, PHYSICAL_TO_DISPLAY_TABLE_ID } from './constants';
 import type { DisplayTableId, FloorReservation, FloorTable, VisualTable } from './types';
-import { DISPLAY_TABLE_IDS } from './types';
 
 type FloorTone = {
     card: string;
@@ -41,7 +40,7 @@ export function parseGuests(guests: string): number {
     return count;
 }
 
-export function getDurationMinutes(guests: string): number {
+function getDurationMinutes(guests: string): number {
     return parseGuests(guests) <= 2 ? 90 : 120;
 }
 
@@ -96,27 +95,28 @@ function extractTableNumber(value: string): DisplayTableId | null {
     const match = value.match(/(\d+)/);
     if (!match) return null;
     const candidate = match[1];
-    return DISPLAY_TABLE_SET.has(candidate) ? (candidate as DisplayTableId) : null;
+    return candidate in PHYSICAL_TO_DISPLAY_TABLE_ID ? (candidate as DisplayTableId) : null;
 }
 
 export function buildVisualTableMap(tables: FloorTable[]): Map<DisplayTableId, VisualTable> {
     const map = new Map<DisplayTableId, VisualTable>();
 
-    DISPLAY_TABLE_IDS.forEach((displayId) => {
+    FLOORPLAN_TABLE_LAYOUT.forEach(({ displayId, physicalId }) => {
         map.set(displayId, {
             displayId,
-            backendId: `table${displayId}`,
+            backendId: `table${physicalId}`,
             label: `Table ${displayId}`,
         });
     });
 
     tables.forEach((table) => {
-        const number = extractTableNumber(`${table.label} ${table.id}`);
-        if (!number) return;
-        map.set(number, {
-            displayId: number,
+        const physicalNumber = extractTableNumber(`${table.label} ${table.id}`);
+        if (!physicalNumber) return;
+        const displayId = PHYSICAL_TO_DISPLAY_TABLE_ID[physicalNumber];
+        map.set(displayId, {
+            displayId,
             backendId: table.id,
-            label: table.label || `Table ${number}`,
+            label: `Table ${displayId}`,
         });
     });
 
@@ -124,8 +124,9 @@ export function buildVisualTableMap(tables: FloorTable[]): Map<DisplayTableId, V
 }
 
 export function reservationHasTable(reservation: FloorReservation, table: VisualTable): boolean {
-    const aliases = new Set(
-        [table.backendId, table.displayId, `table${table.displayId}`].map((value) => value.toLowerCase())
-    );
+    const backendId = String(table.backendId).toLowerCase();
+    const physicalNumber = backendId.match(/(\d+)/)?.[1] ?? null;
+    const aliases = new Set([backendId]);
+    if (physicalNumber) aliases.add(physicalNumber);
     return (reservation.tableIds ?? []).some((id) => aliases.has(String(id).toLowerCase()));
 }

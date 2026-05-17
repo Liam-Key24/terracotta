@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValidEmail } from '../../_utils';
+import { asTrimmedString, clampLength, escapeHtml, isValidEmail } from '../../_utils';
 import { addReservation, confirmationId, getAllReservations } from '../_store';
 import { addToQueue, getQueueEntryById, listQueue, removeFromQueue, type QueueEntry } from '../_queue';
 import { sendConfirmationEmail } from '../sendConfirmationEmail';

@@ -17,9 +17,10 @@ import { formatLongDate } from './utils';
 export function DashboardContent() {
     const searchParams = useSearchParams();
 
-    const [activeListTab, setActiveListTab] = useState<'queue' | 'reservations'>('queue');
+    const [activeListTab, setActiveListTab] = useState<'queue' | 'deleted' | 'reservations'>('queue');
     const [drawerEntry, setDrawerEntry] = useState<QueueEntry | null>(null);
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+    const [deletedQueueEntries, setDeletedQueueEntries] = useState<QueueEntry[]>([]);
     const [suggestMode, setSuggestMode] = useState(false);
     const [suggestDate, setSuggestDate] = useState('');
     const [suggestTime, setSuggestTime] = useState('');
@@ -76,6 +77,18 @@ export function DashboardContent() {
     function handleReservationCancelled(reservationId: string) {
         removeReservation(reservationId);
         setSelectedReservation((previous) => (previous?.id === reservationId ? null : previous));
+    }
+
+    function handleQueueEntryCancelled(queueId: string) {
+        const removedEntry = queue.find((entry) => entry.id === queueId);
+        removeQueueEntry(queueId);
+        if (removedEntry) {
+            setDeletedQueueEntries((previous) => {
+                const withoutCurrent = previous.filter((entry) => entry.id !== queueId);
+                return [removedEntry, ...withoutCurrent];
+            });
+        }
+        setDrawerEntry((previous) => (previous?.id === queueId ? null : previous));
     }
 
     async function approve() {
@@ -208,9 +221,11 @@ export function DashboardContent() {
                     selectedDateLabel={formatLongDate(selectedDate)}
                     isLoading={isLoading}
                     queue={queue}
+                    deletedQueueEntries={deletedQueueEntries}
                     dayReservations={dayReservations}
                     onChangeTab={setActiveListTab}
                     onOpenQueueEntry={openQueueEntry}
+                    onCancelQueueEntry={handleQueueEntryCancelled}
                     onOpenReservationEntry={openReservationEntry}
                 />
                 <DayNotesPanel dayNotes={dayNotes} />

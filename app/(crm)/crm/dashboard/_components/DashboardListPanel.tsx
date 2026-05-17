@@ -1,16 +1,18 @@
-import { CalendarCheckIcon, QueueIcon, UsersIcon } from '@phosphor-icons/react/dist/ssr';
+import { CalendarCheckIcon, QueueIcon, TrashIcon, UsersIcon } from '@phosphor-icons/react/dist/ssr';
 
 import type { QueueEntry, Reservation } from '../types';
 import { formatTableLabels } from '../utils';
 
 type DashboardListPanelProps = {
-    activeListTab: 'queue' | 'reservations';
+    activeListTab: 'queue' | 'deleted' | 'reservations';
     selectedDateLabel: string;
     isLoading: boolean;
     queue: QueueEntry[];
+    deletedQueueEntries: QueueEntry[];
     dayReservations: Reservation[];
-    onChangeTab: (tab: 'queue' | 'reservations') => void;
+    onChangeTab: (tab: 'queue' | 'deleted' | 'reservations') => void;
     onOpenQueueEntry: (entry: QueueEntry) => void;
+    onCancelQueueEntry: (queueId: string) => void;
     onOpenReservationEntry: (reservation: Reservation) => void;
 };
 
@@ -19,9 +21,11 @@ export function DashboardListPanel({
     selectedDateLabel,
     isLoading,
     queue,
+    deletedQueueEntries,
     dayReservations,
     onChangeTab,
     onOpenQueueEntry,
+    onCancelQueueEntry,
     onOpenReservationEntry,
 }: DashboardListPanelProps) {
     return (
@@ -52,6 +56,17 @@ export function DashboardListPanel({
                             Reservations of day
                         </span>
                     </button>
+                    <button
+                        type="button"
+                        onClick={() => onChangeTab('deleted')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium ${activeListTab === 'deleted' ? 'bg-[#631732] text-white' : 'text-slate-700 hover:bg-white'
+                            }`}
+                    >
+                        <span className="inline-flex items-center gap-1.5">
+                            <TrashIcon size={14} weight="fill" />
+                            Deleted
+                        </span>
+                    </button>
                 </div>
                 <span className="text-sm text-slate-500">{selectedDateLabel}</span>
             </div>
@@ -65,25 +80,53 @@ export function DashboardListPanel({
                     <ul className="space-y-2">
                         {queue.map((entry) => (
                             <li key={entry.id}>
-                                <button
-                                    type="button"
-                                    onClick={() => onOpenQueueEntry(entry)}
-                                    className="w-full text-left px-4 py-3 rounded-xl border border-slate-200 hover:border-[#631732]/30 hover:bg-slate-50 transition-colors"
-                                >
-                                    <div className="flex items-center justify-between gap-3">
+                                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 transition-colors hover:border-[#631732]/30 hover:bg-slate-50">
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenQueueEntry(entry)}
+                                        className="min-w-0 text-left"
+                                    >
                                         <p className="font-semibold text-slate-800 truncate">{entry.name}</p>
-                                        <p className="text-xs text-slate-500 whitespace-nowrap">
-                                            {entry.date} · {entry.time}
+                                        <p className="text-sm text-slate-600 inline-flex items-center gap-1.5">
+                                            <UsersIcon size={14} />
+                                            <span>{entry.guests} guests</span>
+                                        </p>
+                                    </button>
+                                    <p className="text-base font-semibold text-slate-700 whitespace-nowrap text-center">
+                                        {entry.date} · {entry.time}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        aria-label={`Cancel ${entry.name}`}
+                                        onClick={() => onCancelQueueEntry(entry.id)}
+                                        className="h-6 w-6 rounded-full text-sm leading-none text-slate-500 hover:bg-red-50 hover:text-red-600"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )
+            ) : activeListTab === 'deleted' ? (
+                deletedQueueEntries.length === 0 ? (
+                    <p className="text-slate-500">No deleted bookings.</p>
+                ) : (
+                    <ul className="space-y-2">
+                        {deletedQueueEntries.map((entry) => (
+                            <li key={entry.id}>
+                                <div className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-slate-800 truncate">{entry.name}</p>
+                                        <p className="text-sm text-slate-600 inline-flex items-center gap-1.5">
+                                            <UsersIcon size={14} />
+                                            <span>{entry.guests} guests</span>
                                         </p>
                                     </div>
-                                    <p className="text-sm text-slate-600 mt-0.5 inline-flex items-center gap-1.5">
-                                        <UsersIcon size={14} />
-                                        <span>
-                                            {entry.guests} guests
-                                            {entry.notes?.trim() ? ` · ${entry.notes.trim()}` : ''}
-                                        </span>
+                                    <p className="text-base font-semibold text-slate-700 whitespace-nowrap text-center">
+                                        {entry.date} · {entry.time}
                                     </p>
-                                </button>
+                                </div>
                             </li>
                         ))}
                     </ul>
