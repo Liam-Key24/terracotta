@@ -22,7 +22,7 @@ const FORM_TIME_OPTIONS = [
     { value: '17:30', label: '5:30 PM' },
     { value: '18:00', label: '6:00 PM - 7:30 PM' },
     { value: '19:30', label: '7:30 PM - 9:00 PM' },
-    { value: '21:00', label: '9:00 PM - 9:30 PM' },
+    { value: '21:00', label: '9:00 PM - 10:30 PM' },
 ]
 
 export default function Form(){
