@@ -1,5 +1,5 @@
 'use client'
-import { AtIcon, PhoneCallIcon } from "@phosphor-icons/react"
+import { AtIcon, MapPinIcon, PhoneCallIcon } from "@phosphor-icons/react"
 import Link from "next/link"
 export default function Footer() {
     return (
@@ -41,6 +41,17 @@ export default function Footer() {
                     >
                         <AtIcon size={20} />
                         <span>info@terracotta-acton.com</span>
+                    </a>
+
+                    <a
+                        href="https://maps.google.com/?q=76 Churchfield Rd, Acton, London W3 6DH"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start space-x-2 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#631732]/70 rounded-md"
+                        aria-label="76 Churchfield Rd, Acton, London W3 6DH"
+                    >
+                        <MapPinIcon size={20} className="shrink-0 mt-1" />
+                        <span className="text-center sm:text-left">76 Churchfield Rd, Acton, London W3 6DH</span>
                     </a>
                 </div>
 
