@@ -8,6 +8,7 @@ export type Reservation = {
     phone: string;
     guests: string;
     notes?: string;
+    promoCode?: string;
     tableIds?: string[];
 };
 

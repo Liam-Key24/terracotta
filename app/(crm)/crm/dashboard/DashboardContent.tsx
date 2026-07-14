@@ -108,6 +108,7 @@ export function DashboardContent() {
                     entryPhone: drawerEntry.phone,
                     entryGuests: drawerEntry.guests,
                     entryNotes: drawerEntry.notes,
+                    entryPromoCode: drawerEntry.promoCode,
                     entryDate: drawerEntry.date,
                     entryTime: drawerEntry.time,
                 }),

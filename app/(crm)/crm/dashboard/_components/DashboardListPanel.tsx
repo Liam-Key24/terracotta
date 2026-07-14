@@ -1,4 +1,4 @@
-import { CalendarCheckIcon, QueueIcon, TrashIcon, UsersIcon } from '@phosphor-icons/react/dist/ssr';
+import { CalendarCheckIcon, QueueIcon, SealPercentIcon, TrashIcon, UsersIcon } from '@phosphor-icons/react/dist/ssr';
 
 import type { QueueEntry, Reservation } from '../types';
 import { formatTableLabels } from '../utils';
@@ -140,8 +140,20 @@ export function DashboardListPanel({
                             <button
                                 type="button"
                                 onClick={() => onOpenReservationEntry(reservation)}
-                                className="w-full text-left rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 hover:border-[#631732]/30 hover:bg-white transition-colors"
+                                className={`relative w-full text-left rounded-xl border px-4 py-3 transition-colors ${
+                                    reservation.promoCode
+                                        ? 'border-amber-400 ring-2 ring-amber-300 bg-gradient-to-br from-amber-50 via-rose-50 to-[#631732]/10 hover:border-amber-500'
+                                        : 'border-slate-200 bg-slate-50 hover:border-[#631732]/30 hover:bg-white'
+                                }`}
                             >
+                                {reservation.promoCode && (
+                                    <span
+                                        className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white shadow ring-2 ring-white"
+                                        title={`Promo applied: ${reservation.promoCode}`}
+                                    >
+                                        <SealPercentIcon size={12} weight="fill" />
+                                    </span>
+                                )}
                                 <div className="flex items-center justify-between gap-3">
                                     <p className="font-semibold text-slate-800 truncate">{reservation.name}</p>
                                     <p className="text-xs text-slate-500 whitespace-nowrap">{reservation.time}</p>

@@ -33,6 +33,7 @@ export type QueueEntry = {
     time: string;
     guests: string;
     notes?: string;
+    promoCode?: string;
     addedAt: string;
 };
 

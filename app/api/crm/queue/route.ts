@@ -13,6 +13,7 @@ function buildEntryFromPayload(payload: Record<string, unknown>, queueId: string
     const fallbackPhone = typeof payload.entryPhone === 'string' ? payload.entryPhone.trim() : '';
     const fallbackGuests = typeof payload.entryGuests === 'string' ? payload.entryGuests.trim() : '';
     const fallbackNotes = typeof payload.entryNotes === 'string' ? payload.entryNotes.trim() : undefined;
+    const fallbackPromoCode = typeof payload.entryPromoCode === 'string' ? payload.entryPromoCode.trim() : undefined;
     if (!fallbackName || !fallbackEmail || !fallbackPhone || !fallbackGuests) return null;
     return {
         id: queueId,
@@ -21,6 +22,7 @@ function buildEntryFromPayload(payload: Record<string, unknown>, queueId: string
         phone: fallbackPhone,
         guests: fallbackGuests,
         notes: fallbackNotes,
+        promoCode: fallbackPromoCode || undefined,
         date: typeof payload.entryDate === 'string' ? payload.entryDate.trim() : '',
         time: typeof payload.entryTime === 'string' ? payload.entryTime.trim() : '',
         addedAt: new Date().toISOString(),
@@ -81,6 +83,7 @@ export async function POST(request: NextRequest) {
             time: entry.time,
             guests: entry.guests,
             notes: entry.notes,
+            promoCode: entry.promoCode,
             tableIds: tableIds?.length ? tableIds : undefined,
         });
         if (!result.success) {

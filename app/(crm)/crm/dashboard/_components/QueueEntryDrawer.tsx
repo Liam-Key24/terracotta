@@ -6,6 +6,7 @@ import {
     NotePencilIcon,
     PhoneIcon,
     QueueIcon,
+    SealPercentIcon,
     TableIcon,
     UserCircleIcon,
     UsersIcon,
@@ -90,6 +91,15 @@ export function QueueEntryDrawer({
                 </div>
 
                 <div className="flex-1 overflow-y-auto bg-slate-50/40">
+                    {entry.promoCode && (
+                        <div className="px-6 py-4 border-b border-amber-300 bg-gradient-to-r from-amber-50 via-rose-50 to-[#631732]/10">
+                            <p className="text-sm font-semibold text-amber-800 inline-flex items-center gap-1.5">
+                                <SealPercentIcon size={16} weight="fill" />
+                                Promo code applied
+                            </p>
+                            <p className="text-2xl font-bold text-[#631732] tracking-wide mt-0.5">{entry.promoCode}</p>
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-slate-200 bg-white">
                         <div className="px-6 py-5 border-b sm:border-b-0 sm:border-r border-slate-200">
                             <div className="flex flex-col items-start gap-2">

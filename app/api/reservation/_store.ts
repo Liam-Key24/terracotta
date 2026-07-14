@@ -23,6 +23,7 @@ export type ReservationRecord = {
     phone: string;
     guests: string;
     notes?: string;
+    promoCode?: string;
     tableIds?: string[];
     addedAt?: string;
 };
@@ -244,7 +245,7 @@ export async function addReservation(
 }
 
 export type ReservationPatch = Partial<
-    Pick<ReservationRecord, 'date' | 'time' | 'tableIds' | 'name' | 'email' | 'phone' | 'guests' | 'notes'>
+    Pick<ReservationRecord, 'date' | 'time' | 'tableIds' | 'name' | 'email' | 'phone' | 'guests' | 'notes' | 'promoCode'>
 >;
 
 export async function updateReservation(id: string, patch: ReservationPatch): Promise<ReservationRecord | null> {

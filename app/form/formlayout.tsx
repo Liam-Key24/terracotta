@@ -34,7 +34,8 @@ export default function Form(){
         insideTime: '',
         outsideTime: '',
         guests: '2',
-        specialRequests: ''
+        specialRequests: '',
+        promoCode: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -68,7 +69,8 @@ export default function Form(){
             time,
             location,
             guests: formData.guests,
-            specialRequests: formData.specialRequests
+            specialRequests: formData.specialRequests,
+            promoCode: formData.promoCode
         };
 
         try {
@@ -93,7 +95,8 @@ export default function Form(){
                     insideTime: '',
                     outsideTime: '',
                     guests: '2',
-                    specialRequests: ''
+                    specialRequests: '',
+                    promoCode: ''
                 });
             } else {
                 setSubmitStatus('error');
@@ -109,11 +112,11 @@ export default function Form(){
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto p-6 md:p-8" id='form'>
-            <h2 className="text-3xl font-light text-center mb-8 text-[#631732]/70">Make a Reservation</h2>
+        <div className="w-full p-0 md:h-full md:max-w-none" id='form'>
+            <h2 className="text-2xl sm:text-3xl font-light text-center mb-5 sm:mb-8 text-[#631732]/70">Make a Reservation</h2>
             
-            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-6 bg-white rounded-lg shadow-lg p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5 sm:space-y-6 bg-white rounded-xl sm:rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:items-center">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                             Full Name *
@@ -126,7 +129,7 @@ export default function Form(){
                             value={formData.name}
                             onChange={handleChange}
                             autoComplete="name"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="John Doe"
                         />
                     </div>
@@ -144,7 +147,7 @@ export default function Form(){
                             onChange={handleChange}
                             autoComplete="email"
                             inputMode="email"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="john@example.com"
                         />
                     </div>
@@ -162,7 +165,7 @@ export default function Form(){
                             onChange={handleChange}
                             autoComplete="tel"
                             inputMode="tel"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                             placeholder="(555) 123-4567"
                         />
                     </div>
@@ -177,7 +180,7 @@ export default function Form(){
                             required
                             value={formData.guests}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         >
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                                 <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -198,13 +201,13 @@ export default function Form(){
                             onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
                             autoComplete="off"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                         />
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                     
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="insideTime" className="block text-sm font-medium text-gray-700 mb-2">
                                     Inside
@@ -214,7 +217,7 @@ export default function Form(){
                                     name="insideTime"
                                     value={formData.insideTime}
                                     onChange={handleChange}
-                                    className="w-full px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                                    className="w-full px-3 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                                 >
                                     <option value="">Select time</option>
                                     {FORM_TIME_OPTIONS.map(({ value, label }) => (
@@ -231,7 +234,7 @@ export default function Form(){
                                     name="outsideTime"
                                     value={formData.outsideTime}
                                     onChange={handleChange}
-                                    className="w-full px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                                    className="w-full px-3 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
                                 >
                                     <option value="">Select time</option>
                                     {FORM_TIME_OPTIONS.map(({ value, label }) => (
@@ -241,6 +244,26 @@ export default function Form(){
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-[#631732]/5 via-amber-50 to-[#631732]/5 border border-amber-200">
+                    <label htmlFor="promoCode" className="flex items-center gap-2 text-sm font-medium text-[#631732] mb-2">
+                        <span aria-hidden>✨</span>
+                        Promo Code <span className="text-gray-500 font-normal">(optional)</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="promoCode"
+                        name="promoCode"
+                        value={formData.promoCode}
+                        onChange={handleChange}
+                        autoComplete="off"
+                        className="w-full px-4 py-3 sm:py-2 text-base border border-amber-300 rounded-lg uppercase tracking-wide focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none placeholder:normal-case placeholder:tracking-normal"
+                        placeholder="e.g. ACTON76"
+                    />
+                    <p className="mt-2 text-xs text-gray-600">
+                        Have a promo code? Enter it here and we&apos;ll apply it when confirming your booking.
+                    </p>
                 </div>
 
                 <div>
@@ -253,7 +276,7 @@ export default function Form(){
                         rows={4}
                         value={formData.specialRequests}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none resize-none"
+                        className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none resize-none"
                         placeholder="Any dietary restrictions, special occasions, or requests..."
                     />
                     <div className="mt-3 px-4 py-3.5 rounded-xl bg-[#631732]/5 border border-[#631732]/15">
@@ -278,7 +301,7 @@ export default function Form(){
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#631732]/80 hover:bg-[#4d1226] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#631732]/80 hover:bg-[#4d1226] text-white font-semibold py-4 sm:py-3 px-6 rounded-lg text-base transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? 'Submitting...' : 'Book Table'}
                 </button>

@@ -1,9 +1,17 @@
 'use client'
 
-export default function PictureComponent() {
+type PictureComponentProps = {
+  className?: string
+}
+
+export default function PictureComponent({ className = '' }: PictureComponentProps) {
   return (
-    <div>
-      <div className="relative h-[50vh] md:h-[60vh] lg:h-[70vh] inset-0 bg-[url(/assets/reserve-photo.avif)] bg-cover bg-center rounded-lg"></div>
+    <div className={`h-44 sm:h-52 md:h-full md:min-h-0 ${className}`}>
+      <div
+        className="relative h-full rounded-xl shadow-lg bg-[url(/assets/reserve-photo.avif)] bg-cover bg-center"
+        role="img"
+        aria-label="Terracotta restaurant dining"
+      />
     </div>
   )
 }

@@ -8,6 +8,7 @@ export type Reservation = {
     phone: string;
     guests: string;
     notes?: string;
+    promoCode?: string;
     tableIds?: string[];
 };
 
@@ -20,6 +21,7 @@ export type QueueEntry = {
     time: string;
     guests: string;
     notes?: string;
+    promoCode?: string;
     addedAt: string;
 };
 

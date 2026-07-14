@@ -39,6 +39,7 @@ const reservationEmailTemplate = (formData: {
     location: string;
     guests: string;
     specialRequests?: string;
+    promoCode?: string;
 }, confirmationUrl: string, rejectUrl: string) => {
     return `
 <!DOCTYPE html>
@@ -111,6 +112,27 @@ const reservationEmailTemplate = (formData: {
             border-radius: 8px;
             margin-top: 16px;
             font-size: 18px;
+        }
+        .promo-badge {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .promo-badge .promo-label {
+            font-weight: 600;
+            color: #92400e;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+        .promo-badge .promo-code {
+            font-weight: 700;
+            color: #631732;
+            font-size: 20px;
+            letter-spacing: 0.05em;
         }
         .button-container {
             text-align: center;
@@ -234,6 +256,12 @@ const reservationEmailTemplate = (formData: {
                         ${escapeHtmlWithBreaks(formData.specialRequests)}
                     </div>
                     ` : ''}
+                    ${formData.promoCode ? `
+                    <div class="promo-badge">
+                        <div class="promo-label">✨ Promo Code Applied</div>
+                        <div class="promo-code">${escapeHtml(formData.promoCode)}</div>
+                    </div>
+                    ` : ''}
                 </div>
                 <div class="button-container">
                     <p>Confirm now or open in CRM for alternatives:</p>
@@ -320,6 +348,7 @@ export async function POST(request: NextRequest) {
         const location = asTrimmedString(raw.location);
         const guests = asTrimmedString(raw.guests);
         const specialRequestsRaw = asTrimmedString(raw.specialRequests);
+        const promoCodeRaw = asTrimmedString(raw.promoCode);
 
         // Validate required fields
         if (!name || !email || !phone || !date || !time || !location || !guests) {
@@ -344,6 +373,7 @@ export async function POST(request: NextRequest) {
             location: clampLength(location, 10),
             guests,
             ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
+            ...(promoCodeRaw ? { promoCode: clampLength(promoCodeRaw.toUpperCase(), 30) } : {}),
         };
 
         // Hard cap: max 5 bookings per date+time (confirmed + queue). 6th gets "booking not made" email.
@@ -390,6 +420,7 @@ export async function POST(request: NextRequest) {
             time: formData.time,
             guests: formData.guests,
             ...(formData.specialRequests ? { notes: formData.specialRequests } : {}),
+            ...(formData.promoCode ? { promoCode: formData.promoCode } : {}),
             addedAt: new Date().toISOString(),
         };
 
@@ -482,6 +513,7 @@ Time: ${formData.time}
 Place: ${formData.location}
 Number of Guests: ${formData.guests}
 ${formData.specialRequests ? `Special Requests: ${formData.specialRequests}` : ''}
+${formData.promoCode ? `Promo Code Applied: ${formData.promoCode}` : ''}
 
 This reservation was submitted through the Terracotta website.
 Please confirm this reservation with the guest as soon as possible.

@@ -11,6 +11,7 @@ import {
     EnvelopeSimpleIcon,
     NotePencilIcon,
     PhoneIcon,
+    SealPercentIcon,
     TableIcon,
     UserCircleIcon,
     UsersIcon,
@@ -26,6 +27,7 @@ type ReservationEditDraft = {
     time: string;
     guests: string;
     notes: string;
+    promoCode: string;
     tableIds: string[];
 };
 
@@ -46,6 +48,7 @@ function toDraft(reservation: Reservation): ReservationEditDraft {
         time: reservation.time ?? '18:00',
         guests: reservation.guests ?? '2',
         notes: reservation.notes ?? '',
+        promoCode: reservation.promoCode ?? '',
         tableIds: reservation.tableIds ?? [],
     };
 }
@@ -115,6 +118,7 @@ export function ReservationDetailsDrawer({
                     time: draft.time.trim(),
                     guests: draft.guests.trim(),
                     notes: draft.notes.trim(),
+                    promoCode: draft.promoCode.trim(),
                     tableIds: draft.tableIds,
                 }),
             });
@@ -245,6 +249,17 @@ export function ReservationDetailsDrawer({
                 <div className="flex-1 overflow-y-auto bg-slate-50/40">
                     {!isEditing && (
                         <>
+                            {reservation.promoCode && (
+                                <div className="px-6 py-4 border-b border-amber-300 bg-gradient-to-r from-amber-50 via-rose-50 to-[#631732]/10">
+                                    <p className="text-sm font-semibold text-amber-800 inline-flex items-center gap-1.5">
+                                        <SealPercentIcon size={16} weight="fill" />
+                                        Promo code applied
+                                    </p>
+                                    <p className="text-2xl font-bold text-[#631732] tracking-wide mt-0.5">
+                                        {reservation.promoCode}
+                                    </p>
+                                </div>
+                            )}
                             <div className="border-b border-slate-200 bg-white px-6 py-5">
                                 <p className="text-sm font-medium text-slate-500 mb-1 inline-flex items-center gap-1.5">
                                     <ClockIcon size={14} />
@@ -460,6 +475,21 @@ export function ReservationDetailsDrawer({
                                         value={draft.notes}
                                         onChange={(e) => setDraft((prev) => ({ ...prev, notes: e.target.value }))}
                                         className="w-full border border-slate-300 rounded-lg px-3 py-2"
+                                    />
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <SealPercentIcon size={14} />
+                                            Promo code
+                                        </span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={draft.promoCode}
+                                        onChange={(e) => setDraft((prev) => ({ ...prev, promoCode: e.target.value.toUpperCase() }))}
+                                        placeholder="e.g. ACTON76"
+                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal"
                                     />
                                 </div>
                             </div>

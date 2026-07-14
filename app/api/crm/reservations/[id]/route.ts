@@ -26,6 +26,7 @@ export async function PATCH(
         phone?: string;
         guests?: string;
         notes?: string;
+        promoCode?: string;
     } = {};
     if (typeof o.date === 'string') patch.date = o.date.trim();
     if (typeof o.time === 'string') patch.time = o.time.trim();
@@ -37,6 +38,9 @@ export async function PATCH(
     if (typeof o.notes === 'string') {
         const notes = o.notes.trim();
         patch.notes = notes;
+    }
+    if (typeof o.promoCode === 'string') {
+        patch.promoCode = o.promoCode.trim().toUpperCase();
     }
 
     const existing = await getMergedReservationById(id);

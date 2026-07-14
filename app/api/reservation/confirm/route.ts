@@ -203,6 +203,7 @@ export async function GET(request: NextRequest) {
         const time = asTrimmedString(raw.time);
         const guests = asTrimmedString(raw.guests);
         const specialRequestsRaw = asTrimmedString(raw.specialRequests);
+        const promoCodeRaw = asTrimmedString(raw.promoCode);
 
         // Approve-from-email flow: token includes queueId → add to reservations, remove from queue, email guest
         if (queueIdFromToken) {
@@ -230,6 +231,7 @@ export async function GET(request: NextRequest) {
                     time,
                     guests,
                     notes: specialRequestsRaw ?? undefined,
+                    promoCode: promoCodeRaw ?? undefined,
                     addedAt: new Date().toISOString(),
                 };
             }
@@ -241,6 +243,7 @@ export async function GET(request: NextRequest) {
                 time: entry.time,
                 guests: entry.guests,
                 notes: entry.notes,
+                promoCode: entry.promoCode,
             });
             console.log('[reservation/confirm] addReservation result', { queueIdFromToken, success: result.success, error: result.error ?? null });
             // #region agent log
@@ -363,6 +366,7 @@ export async function GET(request: NextRequest) {
             time: clampLength(time, 20),
             guests: clampLength(guests, 10),
             ...(specialRequestsRaw ? { specialRequests: clampLength(specialRequestsRaw, 2000) } : {}),
+            ...(promoCodeRaw ? { promoCode: clampLength(promoCodeRaw, 30) } : {}),
         };
 
         const id = confirmationId(token);
@@ -384,6 +388,7 @@ export async function GET(request: NextRequest) {
             time: safeFormData.time,
             guests: safeFormData.guests,
             notes: safeFormData.specialRequests,
+            promoCode: safeFormData.promoCode,
             addedAt: new Date().toISOString(),
         });
 
