@@ -10,7 +10,7 @@ export default function ConditionalSiteLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    if (pathname?.startsWith('/crm')) {
+    if (pathname?.startsWith('/crm') || pathname === '/maintenance') {
         return <>{children}</>;
     }
     return (
