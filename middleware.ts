@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-/** Flip to false (or set MAINTENANCE_MODE=false) after SMTP is fixed. */
-const MAINTENANCE_MODE =
-    process.env.MAINTENANCE_MODE === 'false' ? false : true;
+/** Set MAINTENANCE_MODE=true in Vercel to lock the public site again. */
+const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === 'true';
 
 const COOKIE_NAME = 'crm_session';
 const SECRET = process.env.CRM_SECRET ?? process.env.ADMIN_SECRET ?? '';
