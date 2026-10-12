@@ -154,6 +154,132 @@ export async function upstashSetReservationsJson(json: string): Promise<void> {
     await setJsonKey(KEY_RES, json);
 }
 
+export type UpstashAddReservationResult =
+    | { success: true; record: Record<string, unknown>; listJson: string }
+    | { success: false; error: string };
+
+/**
+ * Atomically append one reservation to `tc:reservations` (read → capacity/id checks → number → SET).
+ * ARGV: id, date, time, maxPerSlot, cutoffDate, recordJson (fields without id/number; may include addedAt).
+ */
+const ADD_RESERVATION_LUA = `
+local raw = redis.call('GET', KEYS[1])
+local list = {}
+if raw and raw ~= false and raw ~= '' then
+  local ok, decoded = pcall(cjson.decode, raw)
+  if ok and type(decoded) == 'table' then
+    list = decoded
+  end
+end
+
+local id = ARGV[1]
+local date = ARGV[2]
+local time = ARGV[3]
+local maxPerSlot = tonumber(ARGV[4])
+local cutoffDate = ARGV[5]
+local recordJson = ARGV[6]
+
+local kept = {}
+for i = 1, #list do
+  local r = list[i]
+  if type(r) == 'table' and type(r.date) == 'string' and r.date >= cutoffDate then
+    kept[#kept + 1] = r
+  end
+end
+list = kept
+
+for i = 1, #list do
+  local r = list[i]
+  if type(r) == 'table' and r.id == id then
+    return cjson.encode({ success = false, error = 'Already exists' })
+  end
+end
+
+local count = 0
+local maxNumber = 0
+for i = 1, #list do
+  local r = list[i]
+  if type(r) == 'table' then
+    local rd = type(r.date) == 'string' and r.date or ''
+    local rt = type(r.time) == 'string' and r.time or ''
+    if rd == date and rt == time then
+      count = count + 1
+    end
+    local n = tonumber(r.number)
+    if n and n > maxNumber then
+      maxNumber = n
+    end
+  end
+end
+
+if count >= maxPerSlot then
+  return cjson.encode({ success = false, error = 'Time slot full' })
+end
+
+local ok, record = pcall(cjson.decode, recordJson)
+if not ok or type(record) ~= 'table' then
+  return cjson.encode({ success = false, error = 'Invalid record' })
+end
+
+record.id = id
+record.number = maxNumber + 1
+record.date = date
+record.time = time
+list[#list + 1] = record
+
+local listJson = cjson.encode(list)
+redis.call('SET', KEYS[1], listJson)
+return cjson.encode({ success = true, record = record, listJson = listJson })
+`;
+
+export async function upstashAddReservationAtomic(args: {
+    id: string;
+    date: string;
+    time: string;
+    maxPerSlot: number;
+    cutoffDate: string;
+    recordJson: string;
+}): Promise<UpstashAddReservationResult> {
+    const redis = getRedis();
+    if (!redis) {
+        throw new Error('Upstash Redis is not configured');
+    }
+
+    let last: unknown;
+    for (let attempt = 0; attempt < SET_RETRIES; attempt++) {
+        try {
+            const raw = await redis.eval<string[], string>(ADD_RESERVATION_LUA, [KEY_RES], [
+                args.id,
+                args.date,
+                args.time,
+                String(args.maxPerSlot),
+                args.cutoffDate,
+                args.recordJson,
+            ]);
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (!parsed || typeof parsed !== 'object') {
+                throw new Error('Unexpected Lua result');
+            }
+            const result = parsed as {
+                success?: boolean;
+                error?: string;
+                record?: Record<string, unknown>;
+                listJson?: string;
+            };
+            if (result.success === true && result.record && typeof result.listJson === 'string') {
+                return { success: true, record: result.record, listJson: result.listJson };
+            }
+            return { success: false, error: typeof result.error === 'string' ? result.error : 'Add failed' };
+        } catch (e) {
+            last = e;
+            if (attempt < SET_RETRIES - 1) {
+                await new Promise((r) => setTimeout(r, SET_RETRY_MS[attempt] ?? 300));
+            }
+        }
+    }
+    throw last instanceof Error ? last : new Error(String(last));
+}
+
 export async function upstashGetCancellationsJson(): Promise<string | null> {
     const redis = getRedis();
     if (!redis) return null;

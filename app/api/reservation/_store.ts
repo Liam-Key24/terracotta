@@ -5,6 +5,7 @@ import { getDataDir } from './_dataDir';
 import { getRetentionCutoffDate, getRetentionCutoffMs } from './_retention';
 import {
     isUpstashConfigured,
+    upstashAddReservationAtomic,
     upstashGetCancellationsJson,
     upstashGetReservationsJson,
     upstashSetCancellationsJson,
@@ -12,6 +13,18 @@ import {
 } from './_upstash';
 
 const MAX_PER_SLOT = 5;
+
+/** Serialises local-file reservation writes within a single process. */
+let reservationWriteChain: Promise<void> = Promise.resolve();
+
+function withReservationLock<T>(fn: () => Promise<T>): Promise<T> {
+    const run = reservationWriteChain.then(fn, fn);
+    reservationWriteChain = run.then(
+        () => undefined,
+        () => undefined
+    );
+    return run;
+}
 
 export type ReservationRecord = {
     id: string;
@@ -219,7 +232,7 @@ export async function getAllReservations(): Promise<ReservationRecord[]> {
     return loadReservations();
 }
 
-export async function addReservation(
+async function addReservationLocal(
     id: string,
     data: Omit<ReservationRecord, 'id' | 'number'>
 ): Promise<{ success: boolean; record?: ReservationRecord; error?: string }> {
@@ -242,6 +255,51 @@ export async function addReservation(
     all.push(record);
     await persistReservations(all);
     return { success: true, record };
+}
+
+async function addReservationUpstash(
+    id: string,
+    data: Omit<ReservationRecord, 'id' | 'number'>
+): Promise<{ success: boolean; record?: ReservationRecord; error?: string }> {
+    const date = String(data.date).trim();
+    const time = String(data.time).trim();
+    const recordPayload: Omit<ReservationRecord, 'id' | 'number'> = {
+        ...data,
+        date,
+        time,
+        addedAt: data.addedAt ?? new Date().toISOString(),
+    };
+    const result = await upstashAddReservationAtomic({
+        id,
+        date,
+        time,
+        maxPerSlot: MAX_PER_SLOT,
+        cutoffDate: getRetentionCutoffDate(),
+        recordJson: JSON.stringify(recordPayload),
+    });
+    if (!result.success) {
+        return { success: false, error: result.error };
+    }
+    const record = result.record as unknown as ReservationRecord;
+    try {
+        const list = JSON.parse(result.listJson) as ReservationRecord[];
+        if (Array.isArray(list)) {
+            writeReservationsFile(applyReservationDateRetention(list));
+        }
+    } catch (err) {
+        console.error('[reservations] Local mirror after Upstash add failed:', err);
+    }
+    return { success: true, record };
+}
+
+export async function addReservation(
+    id: string,
+    data: Omit<ReservationRecord, 'id' | 'number'>
+): Promise<{ success: boolean; record?: ReservationRecord; error?: string }> {
+    if (isUpstashConfigured()) {
+        return addReservationUpstash(id, data);
+    }
+    return withReservationLock(() => addReservationLocal(id, data));
 }
 
 export type ReservationPatch = Partial<
