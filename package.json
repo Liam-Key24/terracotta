@@ -7,7 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test app/api/reservation/**/*.test.ts"
+    "test": "tsx --test app/api/reservation/_store.concurrency.test.ts app/api/reservation/confirm/route.test.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
