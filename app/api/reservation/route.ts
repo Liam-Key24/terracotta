@@ -117,32 +117,28 @@ const reservationEmailTemplate = (formData: {
         .button-container {
             text-align: center;
             margin-top: 28px;
-            padding: 24px;
+            padding: 28px 24px;
             background-color: rgba(99, 23, 50, 0.06);
             border-radius: 10px;
             border: 1px solid rgba(99, 23, 50, 0.15);
         }
         .button-container p {
-            margin: 0 0 20px 0;
+            margin: 0 0 24px 0;
             color: #631732;
             font-weight: 600;
             font-size: 16px;
+            line-height: 1.4;
         }
         .button-row {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 12px 0;
         }
         .button-cell {
             width: 50%;
-            padding: 0 6px;
+            padding: 0;
             text-align: center;
             vertical-align: middle;
-        }
-        .button-cell:first-child {
-            padding-right: 8px;
-        }
-        .button-cell:last-child {
-            padding-left: 8px;
         }
         .button-cell a {
             display: block;
@@ -244,17 +240,17 @@ const reservationEmailTemplate = (formData: {
                     ` : ''}
                 </div>
                 <div class="button-container">
-                    <p>Confirm now or open in CRM for alternatives:</p>
+                    <p>Approve this booking, or decline and invite the guest to rebook:</p>
                     <table class="button-row" role="presentation" cellpadding="0" cellspacing="0">
                         <tr>
                             <td class="button-cell"><a href="${confirmationUrl}" class="confirm-button" style="background:#16a34a; color:#ffffff !important; text-decoration:none;">Confirm</a></td>
-                            <td class="button-cell"><a href="${rejectUrl}" class="reject-button" style="color:#ffffff !important; text-decoration:none;">Review in CRM</a></td>
+                            <td class="button-cell"><a href="${rejectUrl}" class="reject-button" style="background:#b91c1c; color:#ffffff !important; text-decoration:none;">Decline</a></td>
                         </tr>
                     </table>
                 </div>
                 <div class="footer">
                     <p>Submitted via the Terracotta website.</p>
-                    <p>Use confirm to approve instantly, or review in CRM to offer an alternative time.</p>
+                    <p>Confirm approves the booking. Decline removes it and emails the guest a link to book again.</p>
                 </div>
             </div>
         </div>
@@ -451,7 +447,7 @@ export async function POST(request: NextRequest) {
             );
         }
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
-        const rejectUrl = `${baseUrl}/crm/dashboard?queueId=${encodeURIComponent(queueId)}&source=email-reject`;
+        const rejectUrl = `${baseUrl}/api/reservation/reject?queueId=${encodeURIComponent(queueId)}`;
 
         const htmlEmail = reservationEmailTemplate(formData, confirmationUrl, rejectUrl);
 

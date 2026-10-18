@@ -142,7 +142,7 @@ function rejectionEmailHtml(name: string, formUrl: string): string {
             <div class="content">
                 <p class="message">Hi ${escapedName},</p>
                 <p class="message">We're sorry — we couldn't accommodate your request for this time. Please try another date or time; we'd love to have you.</p>
-                <p class="message"><a href="${escapedUrl}">Book another time</a></p>
+                <p class="message"><a href="${escapedUrl}" class="btn" style="display:inline-block;background:#631732;color:#ffffff !important;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Book a new table</a></p>
                 <div class="footer">— Terracotta Team</div>
             </div>
         </div>

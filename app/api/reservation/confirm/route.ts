@@ -38,22 +38,23 @@ const approvePromptPage = (
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Approve reservation</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; margin: -40px -40px 24px -40px; }
-        .header h1 { margin: 0; font-size: 20px; }
-        .details { text-align: left; background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 14px; }
-        .detail-row { padding: 6px 0; border-bottom: 1px solid #ececec; }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 48px 20px; background-color: #f5f5f5; margin: 0; }
+        .container { max-width: 420px; margin: 0 auto; background: white; padding: 40px 36px 44px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 24px 20px; border-radius: 12px 12px 0 0; margin: -40px -36px 28px -36px; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; line-height: 1.3; }
+        .lead { color: #444; font-size: 15px; line-height: 1.55; margin: 0 0 24px; }
+        .details { text-align: left; background: #fafafa; padding: 8px 20px; border-radius: 10px; margin: 0 0 28px; font-size: 15px; }
+        .detail-row { padding: 14px 0; border-bottom: 1px solid #ececec; line-height: 1.45; }
         .detail-row:last-child { border-bottom: none; }
-        .approve-btn { display: inline-block; background: #631732; color: #ffffff !important; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; margin-top: 16px; cursor: pointer; }
+        .approve-btn { display: inline-block; background: #631732; color: #ffffff !important; border: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-top: 4px; cursor: pointer; }
         .approve-btn:hover { background: #55122b; }
-        .sub { color:#666;font-size:14px;margin-top:20px; }
+        .sub { color:#666;font-size:14px;line-height:1.5;margin:28px 0 0; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header"><h1>Approve reservation</h1></div>
-        <p>Review the booking details, then approve to add it to the CRM.</p>
+        <p class="lead">Review the booking details, then approve to confirm.</p>
         <div class="details">
             <div class="detail-row"><strong>Guest:</strong> ${escapeHtml(safeFormData.name)}</div>
             <div class="detail-row"><strong>Email:</strong> ${escapeHtml(safeFormData.email)}</div>
@@ -84,15 +85,15 @@ const approveSuccessPage = (safeFormData: {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservation Confirmed</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; margin: -40px -40px 24px -40px; }
-        .header h1 { margin: 0; font-size: 20px; }
-        .success { color: #631732; font-size: 18px; margin-bottom: 16px; }
-        .details { text-align: left; background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 14px; }
-        .detail-row { padding: 6px 0; border-bottom: 1px solid #ececec; }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 48px 20px; background-color: #f5f5f5; margin: 0; }
+        .container { max-width: 420px; margin: 0 auto; background: white; padding: 40px 36px 44px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 24px 20px; border-radius: 12px 12px 0 0; margin: -40px -36px 28px -36px; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; line-height: 1.3; }
+        .success { color: #631732; font-size: 18px; line-height: 1.45; margin: 0 0 24px; }
+        .details { text-align: left; background: #fafafa; padding: 8px 20px; border-radius: 10px; margin: 0 0 28px; font-size: 15px; }
+        .detail-row { padding: 14px 0; border-bottom: 1px solid #ececec; line-height: 1.45; }
         .detail-row:last-child { border-bottom: none; }
-        .sub { color:#666;font-size:14px;margin-top:20px; }
+        .sub { color:#666;font-size:14px;line-height:1.5;margin:0; }
     </style>
 </head>
 <body>
