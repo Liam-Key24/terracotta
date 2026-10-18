@@ -34,21 +34,29 @@ h1, h2, h3, h4, h5, h6 {
 /* Shared right inset for booking-form select chevrons and date calendar icon. */
 :root {
   --form-icon-inset: 1rem;
+  --form-icon-size: 1rem;
+}
+
+.form-select,
+.form-date {
+  appearance: none;
+  background-repeat: no-repeat;
+  background-size: var(--form-icon-size) var(--form-icon-size);
+  background-position: right var(--form-icon-inset) center;
 }
 
 .form-select {
-  appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: 1rem 1rem;
-  background-position: right var(--form-icon-inset) center;
 }
 
 .form-date {
   color-scheme: light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E");
 }
 
+/* Hide native indicator; keep it clickable. Visible icon uses the shared background-position above. */
 .form-date::-webkit-calendar-picker-indicator {
-  margin-right: var(--form-icon-inset);
+  opacity: 0;
+  cursor: pointer;
 }
 
