@@ -208,6 +208,13 @@ export default function Form(){
                             required
                             value={formData.date}
                             onChange={handleChange}
+                            onClick={(e) => {
+                                try {
+                                    e.currentTarget.showPicker?.()
+                                } catch {
+                                    // Unsupported browsers keep native date behavior.
+                                }
+                            }}
                             min={new Date().toISOString().split('T')[0]}
                             autoComplete="off"
                             className={`${fieldClassName} form-date`}
