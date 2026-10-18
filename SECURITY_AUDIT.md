@@ -10,7 +10,7 @@
 | No hardcoded secrets or login defaults; env required (503 if missing). | Alternative-offer flow still CRM-oriented when used. |
 | Confirm **and** decline links use HMAC-SHA256 signed, expiring tokens; intentional POST required. | CSP allows `'unsafe-inline'` / `'unsafe-eval'` for Next.js practicality. |
 | CRM login: Origin/Referer check, failed-login rate limit (5/15m), timing-safe compares. | Login Origin allowlist is host-based (must keep `NEXT_PUBLIC_BASE_URL` accurate). |
-| Public POST rate limits on reservation/contact via Upstash (in-memory fallback). | |
+| Public POST rate limits on reservation/contact via Upstash (in-memory fallback). | `npm audit`: 5 high on `braces` via `eslint-config-next` (dev-only; no patched release yet). |
 | Security headers: nosniff, Referrer-Policy, frame denial, CSP. | |
 | Session cookie: httpOnly, secure in prod, sameSite, HMAC-signed; middleware checks role. | |
 | Input validation, length clamping, HTML escaping in email/output. | |
@@ -70,7 +70,18 @@ Set in `next.config.ts` for all routes: `X-Content-Type-Options: nosniff`, `Refe
 4. Public rate limits → **Done** (Upstash when configured)
 5. Login Origin + fail rate limit + timing-safe → **Done** (2026-10)
 6. Security headers → **Done** (2026-10)
-7. Dependency upgrades / `npm audit` → track in CI; bump Next 16.4.x + nodemailer on this branch
+7. Dependency upgrades → **Done** for Next 16.4.2 + nodemailer 10.1.6. Remaining `npm audit` highs: see §5a.
+
+---
+
+## 5a. npm audit (known leftover)
+
+| Item | Status |
+|------|--------|
+| **nodemailer** | Cleared on **10.1.6** (SMTP/header injection class of issues). |
+| **braces ≤ 3.0.3** ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)) | **Accepted for now.** Pulled only by `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch`. Dev/lint dependency, not production runtime. |
+| **Why not `npm audit fix --force`** | Force-installs `eslint-config-next@14.2.35`, mismatches Next 16, breaks ESLint flat config, and swaps in other highs (`glob`). No `braces` release newer than 3.0.3 (`first_patched_version: null`). |
+| **Follow-up** | Re-run `npm audit` when `braces` ships a patch, then prefer a normal bump / optional `overrides` — do **not** force-downgrade eslint-config-next. |
 
 ---
 
