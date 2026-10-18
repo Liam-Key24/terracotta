@@ -7,14 +7,14 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test app/api/reservation/_store.concurrency.test.ts app/api/reservation/confirm/route.test.ts"
+    "test": "tsx --test app/api/reservation/_store.concurrency.test.ts app/api/reservation/confirm/route.test.ts app/api/reservation/reject/route.test.ts app/api/crm/login/route.test.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@upstash/redis": "^1.36.0",
     "@vercel/analytics": "^1.6.1",
-    "next": "^16.0.10",
-    "nodemailer": "^7.0.11",
+    "next": "^16.4.2",
+    "nodemailer": "^10.1.6",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
@@ -26,7 +26,7 @@
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.10.8",
     "eslint": "^9",
-    "eslint-config-next": "16.0.3",
+    "eslint-config-next": "^16.4.2",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
