@@ -5,21 +5,6 @@ import { getQueueEntryById, removeFromQueue, type QueueEntry } from '../_queue';
 import { sendConfirmationEmail } from '../sendConfirmationEmail';
 import { verifyConfirmationToken, type ConfirmTokenPayload } from '../_confirmToken';
 
-function debugLog(hypothesisId: string, message: string, data: Record<string, unknown>) {
-    fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            runId: 'confirm-reject-debug-1',
-            hypothesisId,
-            location: 'app/api/reservation/confirm/route.ts',
-            message,
-            data,
-            timestamp: Date.now(),
-        }),
-    }).catch(() => {});
-}
-
 const BASE_CRM_URL = process.env.BASE_CRM_URL ?? '';
 
 function htmlErrorPage(title: string, message: string, status: number): NextResponse {
@@ -137,11 +122,6 @@ function extractTokenFromUrl(parsedUrl: URL): string | null {
         const malformedTokenKey = Array.from(searchParams.keys()).find((k) => k.startsWith('token='));
         if (malformedTokenKey) {
             token = malformedTokenKey.slice('token='.length);
-            console.warn('[reservation/confirm] recovered token from malformed query key');
-            debugLog('H9', 'confirm recovered token from malformed query key', {
-                malformedKeyLength: malformedTokenKey.length,
-                recoveredTokenLength: token.length,
-            });
         }
     }
     if (!token) {
@@ -149,17 +129,6 @@ function extractTokenFromUrl(parsedUrl: URL): string | null {
         const decodedRawQuery = decodeURIComponent(rawQuery);
         if (decodedRawQuery.startsWith('token=')) {
             token = decodedRawQuery.slice('token='.length);
-            console.warn('[reservation/confirm] recovered token from raw decoded query');
-            debugLog('H9', 'confirm recovered token from raw decoded query', {
-                rawQueryLength: rawQuery.length,
-                recoveredTokenLength: token.length,
-            });
-        } else {
-            debugLog('H9', 'confirm token recovery failed', {
-                keyCount: Array.from(searchParams.keys()).length,
-                rawQueryLength: rawQuery.length,
-                hasEqualsInRawQuery: decodedRawQuery.includes('='),
-            });
         }
     }
     return token;
@@ -242,8 +211,6 @@ export async function GET(request: NextRequest) {
     try {
         const parsedUrl = new URL(request.url);
         const token = extractTokenFromUrl(parsedUrl);
-        console.log('[reservation/confirm] GET entered', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
-        debugLog('H1', 'confirm GET entered', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
 
         const parsed = parseTokenOrError(token);
         if (!parsed.ok) return parsed.response;
@@ -283,9 +250,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        console.log('[reservation/confirm] POST entered', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
-        debugLog('H1', 'confirm POST entered', { hasToken: Boolean(token), tokenLength: token?.length ?? 0 });
-
         const parsed = parseTokenOrError(token);
         if (!parsed.ok) return parsed.response;
 
@@ -303,16 +267,6 @@ export async function POST(request: NextRequest) {
             notes: entry.notes,
             promoCode: entry.promoCode,
         });
-        console.log('[reservation/confirm] addReservation result', {
-            queueId,
-            success: result.success,
-            error: result.error ?? null,
-        });
-        debugLog('H3', 'confirm addReservation result', {
-            queueId,
-            success: result.success,
-            error: result.error ?? null,
-        });
 
         if (!result.success) {
             if (result.error === 'Already exists') {
@@ -326,7 +280,6 @@ export async function POST(request: NextRequest) {
         }
 
         await removeFromQueue(queueId);
-        debugLog('H4', 'confirm queue removal attempted', { queueId });
 
         try {
             await sendConfirmationEmail({
@@ -339,10 +292,6 @@ export async function POST(request: NextRequest) {
             });
         } catch (err) {
             console.error('[reservation/confirm] Send confirmation email failed:', err);
-            debugLog('H5', 'confirm guest email send failed', {
-                queueId,
-                error: err instanceof Error ? err.message : 'unknown',
-            });
         }
 
         const crmUrl = BASE_CRM_URL.trim();

@@ -29,23 +29,6 @@ function buildEntryFromPayload(payload: Record<string, unknown>, queueId: string
     };
 }
 
-function debugLog(hypothesisId: string, message: string, data: Record<string, unknown>) {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/1fcc1fa4-567e-4c98-a901-f11466da8e45', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            runId: 'crm-queue-alternative-debug-1',
-            hypothesisId,
-            location: 'app/api/crm/queue/route.ts',
-            message,
-            data,
-            timestamp: Date.now(),
-        }),
-    }).catch(() => {});
-    // #endregion
-}
-
 export async function GET(request: NextRequest) {
     const auth = requireCrm(request);
     if (auth instanceof NextResponse) return auth;
@@ -119,33 +102,18 @@ export async function POST(request: NextRequest) {
         const suggestedDate = typeof o.suggestedDate === 'string' ? o.suggestedDate.trim() : '';
         const suggestedTime = typeof o.suggestedTime === 'string' ? o.suggestedTime.trim() : '';
         const suggestedTableIds = Array.isArray(o.suggestedTableIds) ? (o.suggestedTableIds as string[]).filter((t) => typeof t === 'string') : undefined;
-        debugLog('A1', 'suggest-alternative entered', {
-            queueId,
-            hasEntry: Boolean(entry),
-            hasSuggestedDate: Boolean(suggestedDate),
-            hasSuggestedTime: Boolean(suggestedTime),
-        });
         // Fallback for stale queue UI state: allow suggest flow using entry data supplied by drawer.
         if (!entry) {
             entry = buildEntryFromPayload(o, queueId);
             if (entry) {
                 if (!entry.date) entry.date = suggestedDate;
                 if (!entry.time) entry.time = suggestedTime;
-                debugLog('A2', 'suggest-alternative rebuilt entry from payload', {
-                    queueId,
-                    hasFallbackName: Boolean(entry.name),
-                    hasFallbackEmail: Boolean(entry.email),
-                    hasFallbackPhone: Boolean(entry.phone),
-                    hasFallbackGuests: Boolean(entry.guests),
-                });
             }
         }
         if (!entry) {
-            debugLog('A2', 'suggest-alternative missing entry after fallback', { queueId });
             return NextResponse.json({ error: 'Queue entry not found' }, { status: 404 });
         }
         if (!suggestedDate || !suggestedTime) {
-            debugLog('A3', 'suggest-alternative missing date/time', { queueId, suggestedDate, suggestedTime });
             return NextResponse.json({ error: 'Missing suggestedDate or suggestedTime' }, { status: 400 });
         }
         try {
@@ -161,7 +129,6 @@ export async function POST(request: NextRequest) {
             });
             await removeFromQueue(entry.id);
             if (!BASE_URL) {
-                debugLog('A4', 'suggest-alternative missing BASE_URL', { queueId });
                 return NextResponse.json({ error: 'Server configuration error (NEXT_PUBLIC_BASE_URL missing)' }, { status: 503 });
             }
             const confirmUrl = `${BASE_URL}/reservation/confirm-alternative?token=${encodeURIComponent(token)}`;
@@ -172,15 +139,10 @@ export async function POST(request: NextRequest) {
                 suggestedTime,
                 confirmUrl,
             });
-            debugLog('A5', 'suggest-alternative email sent', { queueId, hasConfirmUrl: Boolean(confirmUrl) });
             return NextResponse.json({ ok: true, token });
         } catch (err) {
             const message = err instanceof Error ? err.message : 'unknown';
             console.error('[crm/queue] suggest-alternative failed:', err);
-            debugLog('A6', 'suggest-alternative failed', {
-                queueId,
-                error: message,
-            });
             return NextResponse.json({ error: `Failed to send alternative offer: ${message}` }, { status: 500 });
         }
     }
