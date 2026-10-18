@@ -113,7 +113,7 @@ export async function sendConfirmationEmail(params: {
     });
 }
 
-const SORRY_EMAIL_SUBJECT = "We're booked let's find you another time at Terracotta";
+const SORRY_EMAIL_SUBJECT = "We're booked – let's find you another time at Terracotta";
 
 function escapeEmailText(value: string): string {
     return value
@@ -123,9 +123,24 @@ function escapeEmailText(value: string): string {
         .replace(/"/g, '&quot;');
 }
 
+/** Format YYYY-MM-DD as "Tue 20 Oct" (en-GB). Falls back to the raw string. */
+export function formatFriendlyBookingDate(date: string): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
+    if (!m) return date;
+    const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+    if (Number.isNaN(d.getTime())) return date;
+    return new Intl.DateTimeFormat('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        timeZone: 'UTC',
+    }).format(d);
+}
+
 function sorryFullyBookedEmailHtml(name: string, date: string, time: string, formUrl: string): string {
+    const friendlyDate = formatFriendlyBookingDate(date);
     const escapedName = escapeEmailText(name);
-    const escapedDate = escapeEmailText(date);
+    const escapedDate = escapeEmailText(friendlyDate);
     const escapedTime = escapeEmailText(time);
     const escapedUrl = escapeEmailText(formUrl);
     return `
@@ -167,9 +182,10 @@ function sorryFullyBookedEmailHtml(name: string, date: string, time: string, for
 }
 
 function sorryFullyBookedEmailText(name: string, date: string, time: string, formUrl: string): string {
+    const friendlyDate = formatFriendlyBookingDate(date);
     return `Hi ${name},
 
-Thank you so much for wanting to dine with us at Terracotta! Unfortunately we're fully booked for ${date} at ${time}, so we can't confirm that reservation this time.
+Thank you so much for wanting to dine with us at Terracotta! Unfortunately we're fully booked for ${friendlyDate} at ${time}, so we can't confirm that reservation this time.
 
 We'd still love to have you, so please book again for another day or time that works for you:
 
