@@ -1,6 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+const fieldClassName =
+    'w-full pl-4 pr-10 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none'
 
 // Shared form time options for inside/outside selects.
 const FORM_TIME_OPTIONS = [
@@ -40,6 +43,12 @@ export default function Form(){
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [submitError, setSubmitError] = useState('');
+
+    useEffect(() => {
+        if (submitStatus !== 'success') return;
+        const timer = setTimeout(() => setSubmitStatus('idle'), 3000);
+        return () => clearTimeout(timer);
+    }, [submitStatus]);
 
     const time = formData.insideTime || formData.outsideTime;
     const location = formData.insideTime ? 'inside' : formData.outsideTime ? 'outside' : '';
@@ -180,7 +189,7 @@ export default function Form(){
                             required
                             value={formData.guests}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className={fieldClassName}
                         >
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                                 <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -201,7 +210,7 @@ export default function Form(){
                             onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
                             autoComplete="off"
-                            className="w-full px-4 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                            className={`${fieldClassName} [color-scheme:light] [&::-webkit-calendar-picker-indicator]:mr-1`}
                         />
                     </div>
 
@@ -217,7 +226,7 @@ export default function Form(){
                                     name="insideTime"
                                     value={formData.insideTime}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                                    className={fieldClassName}
                                 >
                                     <option value="">Select time</option>
                                     {FORM_TIME_OPTIONS.map(({ value, label }) => (
@@ -234,7 +243,7 @@ export default function Form(){
                                     name="outsideTime"
                                     value={formData.outsideTime}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none"
+                                    className={fieldClassName}
                                 >
                                     <option value="">Select time</option>
                                     {FORM_TIME_OPTIONS.map(({ value, label }) => (

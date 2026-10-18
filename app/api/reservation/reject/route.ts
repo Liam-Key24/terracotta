@@ -85,6 +85,8 @@ export async function GET(request: NextRequest) {
         await sendRejectionEmail({
             name: entry.name,
             email: entry.email,
+            date: entry.date,
+            time: entry.time,
             formUrl,
         });
     } catch (err) {

@@ -113,72 +113,34 @@ export async function sendConfirmationEmail(params: {
     });
 }
 
-function rejectionEmailHtml(name: string, formUrl: string): string {
-    const escapedName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const escapedUrl = formUrl.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const SORRY_EMAIL_SUBJECT = "We're booked let's find you another time at Terracotta";
+
+function escapeEmailText(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function sorryFullyBookedEmailHtml(name: string, date: string, time: string, formUrl: string): string {
+    const escapedName = escapeEmailText(name);
+    const escapedDate = escapeEmailText(date);
+    const escapedTime = escapeEmailText(time);
+    const escapedUrl = escapeEmailText(formUrl);
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation update</title>
+    <title>${SORRY_EMAIL_SUBJECT}</title>
     <style>
         body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 24px; background-color: #f5f5f5; }
         .email-wrapper { max-width: 400px; margin: 0 auto; }
         .card { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
         .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 24px 24px 28px; text-align: center; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
-        .content { padding: 28px 24px 32px; }
-        .message { font-size: 17px; margin: 0 0 20px; color: #333; }
-        .footer { margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px; }
-        a { color: #631732; font-weight: 600; }
-    </style>
-</head>
-<body>
-    <div class="email-wrapper">
-        <div class="card">
-            <div class="header"><h1>Reservation update</h1></div>
-            <div class="content">
-                <p class="message">Hi ${escapedName},</p>
-                <p class="message">We're sorry — we couldn't accommodate your request for this time. Please try another date or time; we'd love to have you.</p>
-                <p class="message"><a href="${escapedUrl}" class="btn" style="display:inline-block;background:#631732;color:#ffffff !important;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Book a new table</a></p>
-                <div class="footer">— Terracotta Team</div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>`;
-}
-
-export async function sendRejectionEmail(params: { name: string; email: string; formUrl: string }): Promise<void> {
-    if (MOCK_NO_EMAIL) return;
-    const transporter = createTransporter();
-    await transporter.sendMail({
-        from: SMTP_USER ? `"Terracotta Restaurant" <${SMTP_USER}>` : '"Terracotta" <noreply@local>',
-        to: params.email,
-        subject: 'Reservation request – try another time',
-        html: rejectionEmailHtml(params.name, params.formUrl),
-        text: `Hi ${params.name}, we're sorry we couldn't accommodate your request for this time. Please try another date or time. Book here: ${params.formUrl}`,
-    });
-}
-
-function slotFullEmailHtml(name: string, _date: string, _time: string, formUrl: string): string {
-    const escapedName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const escapedUrl = formUrl.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking not available</title>
-    <style>
-        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 24px; background-color: #f5f5f5; }
-        .email-wrapper { max-width: 400px; margin: 0 auto; }
-        .card { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #631732 0%, #55122b 100%); color: white; padding: 24px 24px 28px; text-align: center; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+        .header h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.35; }
         .content { padding: 28px 24px 32px; }
         .message { font-size: 17px; margin: 0 0 20px; color: #333; }
         .btn { display: inline-block; background: #631732; color: #ffffff !important; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-top: 8px; }
@@ -189,12 +151,14 @@ function slotFullEmailHtml(name: string, _date: string, _time: string, formUrl: 
 <body>
     <div class="email-wrapper">
         <div class="card">
-            <div class="header"><h1>Booking not available</h1></div>
+            <div class="header"><h1>Let's find another time</h1></div>
             <div class="content">
                 <p class="message">Hi ${escapedName},</p>
-                <p class="message">This date and time is fully booked. Please choose another time.</p>
-                <p class="message"><a href="${escapedUrl}" class="btn" style="color:#ffffff !important; text-decoration:none;">Go to website</a></p>
-                <div class="footer">— Terracotta Team</div>
+                <p class="message">Thank you so much for wanting to dine with us at Terracotta! Unfortunately we're fully booked for ${escapedDate} at ${escapedTime}, so we can't confirm that reservation this time.</p>
+                <p class="message">We'd still love to have you, so please book again for another day or time that works for you:</p>
+                <p class="message"><a href="${escapedUrl}" class="btn" style="color:#ffffff !important; text-decoration:none;">Book another time</a></p>
+                <p class="message">If you have any questions or a special occasion in mind, just reply to this email and we'll do our best to help.</p>
+                <p class="message">Hope to see you soon,<br>The Terracotta Team</p>
             </div>
         </div>
     </div>
@@ -202,15 +166,54 @@ function slotFullEmailHtml(name: string, _date: string, _time: string, formUrl: 
 </html>`;
 }
 
-export async function sendSlotFullEmail(params: { name: string; email: string; date: string; time: string; formUrl: string }): Promise<void> {
+function sorryFullyBookedEmailText(name: string, date: string, time: string, formUrl: string): string {
+    return `Hi ${name},
+
+Thank you so much for wanting to dine with us at Terracotta! Unfortunately we're fully booked for ${date} at ${time}, so we can't confirm that reservation this time.
+
+We'd still love to have you, so please book again for another day or time that works for you:
+
+${formUrl}
+
+If you have any questions or a special occasion in mind, just reply to this email and we'll do our best to help.
+
+Hope to see you soon,
+The Terracotta Team`;
+}
+
+export async function sendRejectionEmail(params: {
+    name: string;
+    email: string;
+    date: string;
+    time: string;
+    formUrl: string;
+}): Promise<void> {
     if (MOCK_NO_EMAIL) return;
     const transporter = createTransporter();
     await transporter.sendMail({
         from: SMTP_USER ? `"Terracotta Restaurant" <${SMTP_USER}>` : '"Terracotta" <noreply@local>',
         to: params.email,
-        subject: `Booking not available — ${params.date} at ${params.time} is fully booked`,
-        html: slotFullEmailHtml(params.name, params.date, params.time, params.formUrl),
-        text: `Hi ${params.name}, this date and time is fully booked. Please choose another time. ${params.formUrl}`,
+        subject: SORRY_EMAIL_SUBJECT,
+        html: sorryFullyBookedEmailHtml(params.name, params.date, params.time, params.formUrl),
+        text: sorryFullyBookedEmailText(params.name, params.date, params.time, params.formUrl),
+    });
+}
+
+export async function sendSlotFullEmail(params: {
+    name: string;
+    email: string;
+    date: string;
+    time: string;
+    formUrl: string;
+}): Promise<void> {
+    if (MOCK_NO_EMAIL) return;
+    const transporter = createTransporter();
+    await transporter.sendMail({
+        from: SMTP_USER ? `"Terracotta Restaurant" <${SMTP_USER}>` : '"Terracotta" <noreply@local>',
+        to: params.email,
+        subject: SORRY_EMAIL_SUBJECT,
+        html: sorryFullyBookedEmailHtml(params.name, params.date, params.time, params.formUrl),
+        text: sorryFullyBookedEmailText(params.name, params.date, params.time, params.formUrl),
     });
 }
 
