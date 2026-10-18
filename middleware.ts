@@ -7,9 +7,22 @@ const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === 'true';
 const COOKIE_NAME = 'crm_session';
 const SECRET = process.env.CRM_SECRET ?? process.env.ADMIN_SECRET ?? '';
 
-async function verifyCookie(value: string): Promise<{ role: string } | null> {
+function timingSafeEqualString(a: string, b: string): boolean {
+    const enc = new TextEncoder();
+    const bufA = enc.encode(a);
+    const bufB = enc.encode(b);
+    if (bufA.length !== bufB.length) return false;
+    let diff = 0;
+    for (let i = 0; i < bufA.length; i++) {
+        diff |= bufA[i]! ^ bufB[i]!;
+    }
+    return diff === 0;
+}
+
+async function verifyCookie(value: string): Promise<{ role: 'admin' | 'developer' } | null> {
     if (!SECRET || !value || !value.includes('.')) return null;
     const [payloadB64, sig] = value.split('.');
+    if (!payloadB64 || !sig) return null;
     const key = await crypto.subtle.importKey(
         'raw',
         new TextEncoder().encode(SECRET),
@@ -26,7 +39,7 @@ async function verifyCookie(value: string): Promise<{ role: string } | null> {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
-    if (sig !== expectedSig) return null;
+    if (!timingSafeEqualString(sig, expectedSig)) return null;
     try {
         const base64 =
             payloadB64.replace(/-/g, '+').replace(/_/g, '/') +
@@ -35,7 +48,13 @@ async function verifyCookie(value: string): Promise<{ role: string } | null> {
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         const payload = JSON.parse(new TextDecoder().decode(bytes));
-        if (payload.exp && payload.exp > Date.now()) return { role: payload.role };
+        if (
+            payload.exp &&
+            payload.exp > Date.now() &&
+            (payload.role === 'admin' || payload.role === 'developer')
+        ) {
+            return { role: payload.role };
+        }
     } catch {
         // ignore
     }
