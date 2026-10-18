@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react'
 const fieldClassName =
     'w-full pl-4 pr-10 py-3 sm:py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none'
 
+// Native select arrows ignore padding; .form-select chevron uses the same --form-icon-inset as .form-date.
+const selectClassName = `${fieldClassName} form-select`
+
 // Shared form time options for inside/outside selects.
 const FORM_TIME_OPTIONS = [
     { value: '10:00', label: '10:00 AM' },
@@ -186,7 +189,7 @@ export default function Form(){
                             required
                             value={formData.guests}
                             onChange={handleChange}
-                            className={fieldClassName}
+                            className={selectClassName}
                         >
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                                 <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -207,7 +210,7 @@ export default function Form(){
                             onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
                             autoComplete="off"
-                            className={`${fieldClassName} [color-scheme:light] [&::-webkit-calendar-picker-indicator]:mr-1`}
+                            className={`${fieldClassName} form-date`}
                         />
                     </div>
 
@@ -223,7 +226,7 @@ export default function Form(){
                                     name="insideTime"
                                     value={formData.insideTime}
                                     onChange={handleChange}
-                                    className={fieldClassName}
+                                    className={selectClassName}
                                 >
                                     <option value="">Select time</option>
                                     {FORM_TIME_OPTIONS.map(({ value, label }) => (
@@ -240,7 +243,7 @@ export default function Form(){
                                     name="outsideTime"
                                     value={formData.outsideTime}
                                     onChange={handleChange}
-                                    className={fieldClassName}
+                                    className={selectClassName}
                                 >
                                     <option value="">Select time</option>
                                     {FORM_TIME_OPTIONS.map(({ value, label }) => (
