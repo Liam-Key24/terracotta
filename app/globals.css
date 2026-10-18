@@ -31,3 +31,24 @@ h1, h2, h3, h4, h5, h6 {
 
 }
 
+/* Shared right inset for booking-form select chevrons and date calendar icon. */
+:root {
+  --form-icon-inset: 1rem;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
+  background-position: right var(--form-icon-inset) center;
+}
+
+.form-date {
+  color-scheme: light;
+}
+
+.form-date::-webkit-calendar-picker-indicator {
+  margin-right: var(--form-icon-inset);
+}
+
