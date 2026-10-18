@@ -46,8 +46,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Do not use appearance:none on date — it breaks the native picker in Chromium. */
+/* Native date inputs have a large intrinsic min-width; override so they match siblings in the grid. */
 .form-date {
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   color-scheme: light;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;

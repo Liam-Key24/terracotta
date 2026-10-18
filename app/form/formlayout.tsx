@@ -197,7 +197,7 @@ export default function Form(){
                         </select>
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                         <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2 w-full">
                             Date *
                         </label>
