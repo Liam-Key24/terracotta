@@ -5,7 +5,7 @@ import { asTrimmedString, clampLength, escapeHtml, escapeHtmlWithBreaks, isValid
 import { checkRateLimit } from '../_rateLimit';
 import { addToQueue, countQueueForSlot } from './_queue';
 import { sendSlotFullEmail } from './sendConfirmationEmail';
-import { signConfirmationToken } from './_confirmToken';
+import { signConfirmationToken, signDeclineToken } from './_confirmToken';
 import { countForSlot } from './_store';
 import { formatRedisErrorForClient, isUpstashConfigured } from './_upstash';
 
@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
         );
     }
     try {
-        const limit = checkRateLimit(request);
+        const limit = await checkRateLimit(request);
         if (!limit.ok) {
             return NextResponse.json(
                 { error: 'Too many requests. Please try again in a minute.' },
@@ -447,7 +447,14 @@ export async function POST(request: NextRequest) {
             );
         }
         const confirmationUrl = `${baseUrl}/api/reservation/confirm?token=${encodeURIComponent(confirmationToken)}`;
-        const rejectUrl = `${baseUrl}/api/reservation/reject?queueId=${encodeURIComponent(queueId)}`;
+        const declineToken = signDeclineToken(queueId);
+        if (!declineToken) {
+            return NextResponse.json(
+                { error: 'Server configuration error' },
+                { status: 503 }
+            );
+        }
+        const rejectUrl = `${baseUrl}/api/reservation/reject?token=${encodeURIComponent(declineToken)}`;
 
         const htmlEmail = reservationEmailTemplate(formData, confirmationUrl, rejectUrl);
 
