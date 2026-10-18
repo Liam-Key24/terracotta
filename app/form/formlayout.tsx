@@ -38,7 +38,6 @@ export default function Form(){
         outsideTime: '',
         guests: '2',
         specialRequests: '',
-        promoCode: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -79,7 +78,6 @@ export default function Form(){
             location,
             guests: formData.guests,
             specialRequests: formData.specialRequests,
-            promoCode: formData.promoCode
         };
 
         try {
@@ -105,7 +103,6 @@ export default function Form(){
                     outsideTime: '',
                     guests: '2',
                     specialRequests: '',
-                    promoCode: ''
                 });
             } else {
                 setSubmitStatus('error');
@@ -253,26 +250,6 @@ export default function Form(){
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-[#631732]/5 via-amber-50 to-[#631732]/5 border border-amber-200">
-                    <label htmlFor="promoCode" className="flex items-center gap-2 text-sm font-medium text-[#631732] mb-2">
-                        <span aria-hidden>✨</span>
-                        Promo Code <span className="text-gray-500 font-normal">(optional)</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="promoCode"
-                        name="promoCode"
-                        value={formData.promoCode}
-                        onChange={handleChange}
-                        autoComplete="off"
-                        className="w-full px-4 py-3 sm:py-2 text-base border border-amber-300 rounded-lg uppercase tracking-wide focus:ring-2 focus:ring-[#9d2b52] focus:border-[#9d2b52] outline-none placeholder:normal-case placeholder:tracking-normal"
-                        placeholder="e.g. ACTON76"
-                    />
-                    <p className="mt-2 text-xs text-gray-600">
-                        Have a promo code? Enter it here and we&apos;ll apply it when confirming your booking.
-                    </p>
                 </div>
 
                 <div>
