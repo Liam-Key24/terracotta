@@ -10,8 +10,8 @@ const dataDir = mkdtempSync(join(tmpdir(), 'terracotta-confirm-'));
 
 process.env.TERRACOTTA_DATA_DIR = dataDir;
 process.env.CRM_SECRET = 'test-confirm-secret';
-process.env.BASE_CRM_URL = 'https://example.com/crm';
 process.env.MOCK_NO_EMAIL = 'true';
+delete process.env.BASE_CRM_URL;
 delete process.env.UPSTASH_REDIS_REST_URL;
 delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -100,7 +100,9 @@ describe('reservation confirm route', { concurrency: false }, () => {
             })
         );
         assert.equal(first.status, 200);
-        assert.match(await first.text(), /Reservation confirmed/);
+        const firstHtml = await first.text();
+        assert.match(firstHtml, /Reservation approved|confirmed/i);
+        assert.doesNotMatch(firstHtml, /Open CRM|BASE_CRM_URL/i);
 
         const reservations = await loadReservations();
         assert.ok(reservations.some((r) => r.id === booking.id));

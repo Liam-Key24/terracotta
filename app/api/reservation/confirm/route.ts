@@ -5,8 +5,6 @@ import { getQueueEntryById, removeFromQueue, type QueueEntry } from '../_queue';
 import { sendConfirmationEmail } from '../sendConfirmationEmail';
 import { verifyConfirmationToken, type ConfirmTokenPayload } from '../_confirmToken';
 
-const BASE_CRM_URL = process.env.BASE_CRM_URL ?? '';
-
 function htmlErrorPage(title: string, message: string, status: number): NextResponse {
     return new NextResponse(
         `<!DOCTYPE html>
@@ -72,13 +70,18 @@ const approvePromptPage = (
 </body>
 </html>`;
 
-const approveSuccessPage = (
-    safeFormData: { name: string; date: string; time: string; guests: string; email: string },
-    crmUrl: string
-) =>
+const approveSuccessPage = (safeFormData: {
+    name: string;
+    date: string;
+    time: string;
+    guests: string;
+    email: string;
+}) =>
     `<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservation Confirmed</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5; }
@@ -87,31 +90,24 @@ const approveSuccessPage = (
         .header h1 { margin: 0; font-size: 20px; }
         .success { color: #631732; font-size: 18px; margin-bottom: 16px; }
         .details { text-align: left; background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 14px; }
-        .detail-row { padding: 6px 0; }
-        .crm-btn { display: inline-block; background: #631732; color: #ffffff !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; margin-top: 16px; }
-        .crm-btn:hover { background: #55122b; color: #ffffff; }
-        .sub { color:#666;font-size:13px;margin-top:8px; }
+        .detail-row { padding: 6px 0; border-bottom: 1px solid #ececec; }
+        .detail-row:last-child { border-bottom: none; }
+        .sub { color:#666;font-size:14px;margin-top:20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header"><h1>Reservation confirmed</h1></div>
-        <p class="success">Confirmed and added to CRM.</p>
+        <div class="header"><h1>Reservation approved</h1></div>
+        <p class="success">This booking is confirmed.</p>
         <div class="details">
             <div class="detail-row"><strong>Guest:</strong> ${escapeHtml(safeFormData.name)}</div>
+            <div class="detail-row"><strong>Email:</strong> ${escapeHtml(safeFormData.email)}</div>
             <div class="detail-row"><strong>Date:</strong> ${escapeHtml(safeFormData.date)}</div>
             <div class="detail-row"><strong>Time:</strong> ${escapeHtml(safeFormData.time)}</div>
             <div class="detail-row"><strong>Guests:</strong> ${escapeHtml(safeFormData.guests)}</div>
         </div>
-        <a href="${escapeHtml(crmUrl)}" class="crm-btn" style="color:#ffffff !important; text-decoration:none;">Open CRM</a>
-        <p style="color:#666;font-size:14px;margin-top:20px;">You can close this tab now.</p>
-        <p class="sub">Attempting to close automatically...</p>
+        <p class="sub">A confirmation email has been sent to the guest. You can close this tab.</p>
     </div>
-    <script>
-      (function () {
-        try { window.close(); } catch (_) {}
-      })();
-    </script>
 </body>
 </html>`;
 
@@ -294,12 +290,7 @@ export async function POST(request: NextRequest) {
             console.error('[reservation/confirm] Send confirmation email failed:', err);
         }
 
-        const crmUrl = BASE_CRM_URL.trim();
-        if (!crmUrl) {
-            return htmlErrorPage('Server configuration error', 'BASE_CRM_URL is missing.', 503);
-        }
-
-        return new NextResponse(approveSuccessPage(safeBookingFromEntry(entry), crmUrl), {
+        return new NextResponse(approveSuccessPage(safeBookingFromEntry(entry)), {
             status: 200,
             headers: { 'Content-Type': 'text/html' },
         });
