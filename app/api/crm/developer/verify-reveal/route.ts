@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'node:crypto';
+import { safeEqualString } from '../../../_crypto';
 import { requireDeveloper } from '../../requireAuth';
 
 const DEVELOPER_PASSWORD = process.env.DEVELOPER_PASSWORD ?? '';
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Bad request' }, { status: 400 });
     }
     const password = typeof (body as { password?: string }).password === 'string' ? (body as { password: string }).password : '';
-    if (!DEVELOPER_PASSWORD || password !== DEVELOPER_PASSWORD) {
+    if (!DEVELOPER_PASSWORD || !safeEqualString(password, DEVELOPER_PASSWORD)) {
         return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
     if (!REVEAL_SECRET) {

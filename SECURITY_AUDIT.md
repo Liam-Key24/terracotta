@@ -1,29 +1,26 @@
 # Security Audit – Terracotta
 
-**Date:** 2025-03  
-**Scope:** App (Next.js), API routes, CRM auth, reservation/contact flows, file storage.
+**Date:** 2026-10-18  
+**Scope:** App (Next.js), API routes, CRM auth, reservation/contact flows, file/Upstash storage.
 
-**Security rating: 7.5 / 10**
+**Security rating: 8.5 / 10**
 
-| What’s strong | What’s missing or limited |
-|---------------|----------------------------|
-| No hardcoded secrets or login defaults; env required (503 if missing). | Reject link uses raw `queueId` (guessable if ID is known). |
-| Reservation confirmation token is HMAC-SHA256 signed; only signed tokens accepted. | No CSRF protection on CRM login. |
-| Per-IP rate limiting on reservation and contact POSTs (10/60s). | Rate limit is in-memory (resets on restart; multi-instance needs Redis). |
-| 2-month data retention; lazy cleanup on read. | Dependency audit and security headers not verified in this audit. |
-| Session cookie: httpOnly, secure in prod, sameSite, HMAC-signed. | |
-| Input validation, length clamping, and HTML escaping in email/output. | |
-| No passwords or full tokens in logs; generic error messages to clients. | |
+| What’s strong | What’s still limited |
+|---------------|----------------------|
+| No hardcoded secrets or login defaults; env required (503 if missing). | Alternative-offer flow still CRM-oriented when used. |
+| Confirm **and** decline links use HMAC-SHA256 signed, expiring tokens; intentional POST required. | CSP allows `'unsafe-inline'` / `'unsafe-eval'` for Next.js practicality. |
+| CRM login: Origin/Referer check, failed-login rate limit (5/15m), timing-safe compares. | Login Origin allowlist is host-based (must keep `NEXT_PUBLIC_BASE_URL` accurate). |
+| Public POST rate limits on reservation/contact via Upstash (in-memory fallback). | `npm audit`: 5 high on `braces` via `eslint-config-next` (dev-only; no patched release yet). |
+| Security headers: nosniff, Referrer-Policy, frame denial, CSP. | |
+| Session cookie: httpOnly, secure in prod, sameSite, HMAC-signed; middleware checks role. | |
+| Input validation, length clamping, HTML escaping in email/output. | |
 
 ---
 
 ## Executive summary
 
-- **Addressed:** No hardcoded default secrets or login credentials; env required (503 if missing). Reservation confirmation token is HMAC-SHA256 signed; only signed tokens accepted.
-- **Addressed:** Per-IP rate limiting on `POST /api/reservation` and `POST /api/contact` (10 req/60s).
-- **Addressed:** Data retention: reservations, queue, alternatives, and cancellations older than 2 months are removed on read.
-- **Medium:** Reject/confirm links use signed token where applicable; raw `queueId` in reject URL remains guessable if ID is known. No CSRF on login.
-- **Low:** Cookie and token practices are sound; input validation and escaping in place.
+- **Addressed (2026-10):** Decline links use signed tokens with GET prompt + POST decline (replay-safe). CRM login hardened (Origin, rate limit, timing-safe). Public rate limits moved to Upstash when configured. Security headers added. Timing-safe compares for cookies/passwords. Guest “fully booked” email copy/date formatting updated.
+- **Addressed (earlier):** Env-only secrets; confirm token HMAC; contact/reservation rate limits; 2-month retention.
 
 ---
 
@@ -31,131 +28,78 @@
 
 | Finding | Severity | Details |
 |--------|----------|---------|
-| **Secret from env only** | OK | `auth.ts` and `middleware.ts` use `CRM_SECRET ?? ADMIN_SECRET ?? ''`; no literal default. If unset, cookie signing fails and login returns 503. |
-| **No default admin/dev passwords** | OK | `login/route.ts` requires `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `DEVELOPER_PASSWORD` from env; returns 503 if any missing. Same in `developer/verify-reveal/route.ts`. |
-| **Cookie settings** | OK | `httpOnly: true`, `secure` in production, `sameSite: 'lax'`, 24h `maxAge`. |
-| **Session verification** | OK | HMAC-SHA256 over payload; expiry checked; role restricted to `admin` \| `developer`. |
-| **Middleware vs API** | OK | Middleware protects `/crm`; API routes use `requireCrm` / `requireDeveloper` with same cookie. |
-
-**Status:** Env-only; no defaults. Set `CRM_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `DEVELOPER_PASSWORD` in production.
+| **Secret from env only** | OK | `auth.ts` / `middleware.ts` use `CRM_SECRET ?? ADMIN_SECRET`; empty → no signing / 503. |
+| **Login Origin check** | OK | `POST /api/crm/login` rejects Origin/Referer outside allowlist (site + localhost). |
+| **Login rate limit** | OK | 5 failed attempts / 15 minutes per IP+username (Upstash or memory); 429 + logged. |
+| **Timing-safe compares** | OK | Passwords and cookie HMAC signatures use constant-time compares. |
+| **Cookie settings** | OK | `httpOnly`, `secure` in production, `sameSite: 'lax'`, 24h. |
+| **Middleware role check** | OK | Session must be `admin` or `developer` (matches `requireAuth`). |
 
 ---
 
-## 2. Reservation confirmation token
+## 2. Reservation confirmation & decline tokens
 
 | Finding | Severity | Details |
 |--------|----------|---------|
-| **Token signed** | OK | Token is `base64url(payload).HMAC-SHA256(payload)` in `_confirmToken.ts`. Only signed tokens accepted; no legacy unsigned. |
-| **Token length cap** | OK | `token.length > 8000` rejected. |
-| **Payload validation** | OK | Required fields and types validated after decode; lengths clamped. |
-
-**Status:** Implemented. Sign with `CRM_SECRET`/`ADMIN_SECRET`; verify in confirm route before using payload.
+| **Confirm token** | OK | HMAC-SHA256, 48h expiry, purpose `confirm`; GET prompt, POST approves. |
+| **Decline token** | OK | Same scheme with purpose `decline`; GET prompt, POST declines + guest email. |
+| **Replay** | OK | Queue removal makes replay return 404 already processed. |
 
 ---
 
-## 3. Alternative-offer token
+## 3. Rate limiting & DoS
 
 | Finding | Severity | Details |
 |--------|----------|---------|
-| **Entropy** | OK | `randomBytes(24).toString('base64url')` (~144 bits). |
-| **Storage & expiry** | OK | Stored server-side; 7-day expiry in `_alternatives.ts`. |
-| **One-time use** | OK | Removed after successful confirm. |
-
-No change required for this token.
+| **Public POSTs** | OK | Reservation + contact: 10 / 60s per client IP via Upstash (`tc:ratelimit:*`), memory fallback. |
+| **Client IP** | OK | Prefers `x-real-ip` / rightmost forwarded hop (not leftmost spoofable value alone). |
 
 ---
 
-## 4. Input validation & injection
+## 4. Security headers
 
-| Area | Status |
+Set in `next.config.ts` for all routes: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, CSP with `frame-ancestors 'none'`.
+
+---
+
+## 5. Checklist
+
+1. Env-only secrets → **Done**
+2. Confirm token signed → **Done**
+3. Decline token signed + intentional POST → **Done** (2026-10)
+4. Public rate limits → **Done** (Upstash when configured)
+5. Login Origin + fail rate limit + timing-safe → **Done** (2026-10)
+6. Security headers → **Done** (2026-10)
+7. Dependency upgrades → **Done** for Next 16.4.2 + nodemailer 10.1.6. Remaining `npm audit` highs: see §5a.
+
+---
+
+## 5a. npm audit (known leftover)
+
+| Item | Status |
 |------|--------|
-| **Reservation POST** | Required fields and types validated; email format; guest count 1–20; lengths clamped; `escapeHtml` / `escapeHtmlWithBreaks` in owner email template. |
-| **Contact POST** | Same pattern: validation, clamping, escaping in email. |
-| **Confirm flow** | Decoded token validated and clamped; queue entry fetched by `queueId` from token. |
-| **Reject flow** | `queueId` length ≤ 100; no user input in HTML response. |
-| **Path traversal** | Data files use fixed paths under `process.cwd()/data/`. No user input in paths. |
-| **SQL/NoSQL** | N/A (JSON files only). |
-
-Recommendation: Keep existing validation and escaping; add signature verification for confirmation token as above.
+| **nodemailer** | Cleared on **10.1.6** (SMTP/header injection class of issues). |
+| **braces ≤ 3.0.3** ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)) | **Accepted for now.** Pulled only by `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch`. Dev/lint dependency, not production runtime. |
+| **Why not `npm audit fix --force`** | Force-installs `eslint-config-next@14.2.35`, mismatches Next 16, breaks ESLint flat config, and swaps in other highs (`glob`). No `braces` release newer than 3.0.3 (`first_patched_version: null`). |
+| **Follow-up** | Re-run `npm audit` when `braces` ships a patch, then prefer a normal bump / optional `overrides` — do **not** force-downgrade eslint-config-next. |
 
 ---
 
-## 5. Rate limiting & DoS
-
-| Finding | Severity | Details |
-|--------|----------|---------|
-| **Per-IP rate limiting** | OK | `POST /api/reservation` and `POST /api/contact`: 10 requests per IP per 60s via `app/api/_rateLimit.ts`. Returns 429 when exceeded. |
-
-**Status:** Implemented. See §10. For multi-instance deploy, use Redis or similar.
-
----
-
-## 6. CORS & origin
-
-- Reservation route uses `origin` only to choose `baseUrl` for links; allowed origins are fixed (`localhost:3000`, `terracotta-acton.com`). No broad CORS relaxation found.
-- Next.js default CORS applies; no custom per-route CORS that would expose APIs inappropriately.
-
----
-
-## 7. Sensitive data & logging
-
-- No logging of passwords or full tokens.
-- `console.info` used only for “email captured” when SMTP is unset (no sensitive payload).
-- Error responses are generic (“Invalid credentials”, “Failed to process reservation”). No stack traces or internal details in API responses.
-
----
-
-## 8. Dependencies
-
-- Run `npm audit` and address reported vulnerabilities.
-- Keep Next.js and Node within supported versions.
-
----
-
-## 9. Checklist of recommended actions
-
-1. **Critical:** Remove hardcoded default for `CRM_SECRET`/`ADMIN_SECRET` in production; require env. → **Done.** Default only in non-production; middleware and auth reject when secret is empty.
-2. **Critical:** Remove hardcoded defaults for `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `DEVELOPER_PASSWORD` in production; require env and fail login if missing. → **Done.** Login and verify-reveal return 503 if env unset in production.
-3. **Critical:** Sign reservation confirmation token (HMAC of payload) and verify signature in confirm route before using payload. → **Done.** `_confirmToken.ts` signs with HMAC-SHA256; confirm route accepts only signed tokens (no legacy unsigned).
-4. **High:** Add rate limiting to `POST /api/reservation` and `POST /api/contact`. → **Done.** In-memory per-IP limits added (see below).
-5. **Medium:** Consider short-lived, single-use tokens for reject links (e.g. signed token instead of raw `queueId` in URL) to reduce impact of link leakage. → Deferred.
-6. **Low:** Document required env vars (including `CRM_SECRET`, `ADMIN_*`, `DEVELOPER_PASSWORD`) in README or `.env.example`. → **Done.** `.env.example` added.
-
----
-
-## 10. Rate limiting (implemented)
-
-- **Reservation:** `POST /api/reservation` — 10 requests per IP per 60 seconds.
-- **Contact:** `POST /api/contact` — 10 requests per IP per 60 seconds.
-
-Implemented in `app/api/_rateLimit.ts` (in-memory map; resets on restart). Returns 429 when exceeded. For multi-instance or persistent limits, use Redis or a dedicated rate-limit service.
-
----
-
-## 11. Environment variables (production)
-
-Set these in production (e.g. in your host’s env or `.env.production`). Do not rely on defaults.
+## 6. Environment variables (production)
 
 | Variable | Required (prod) | Description |
 |----------|-----------------|-------------|
-| `CRM_SECRET` | Yes | Long random secret (≥32 chars) for signing CRM session cookies and confirmation tokens. |
-| `ADMIN_USERNAME` | Yes | CRM admin login username. |
-| `ADMIN_PASSWORD` | Yes | CRM admin login password. |
-| `DEVELOPER_PASSWORD` | Yes | CRM developer login password (for developer tools). |
-| `NEXT_PUBLIC_BASE_URL` | Recommended | Base URL for confirmation/reject links (e.g. `https://terracotta-acton.com`). |
-| `OWNER_EMAIL` | Yes (for email) | Address that receives reservation and contact form emails. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Yes (for email) | SMTP credentials for sending mail. |
-| `ADMIN_SECRET` | Optional | Legacy alias for `CRM_SECRET` if you already use it. |
+| `CRM_SECRET` | Yes | ≥32 chars; cookies + confirm/decline tokens. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Yes | CRM admin login. |
+| `DEVELOPER_PASSWORD` | Yes | Developer login / reveal. |
+| `NEXT_PUBLIC_BASE_URL` | Yes | Links + login Origin allowlist. |
+| `OWNER_EMAIL` + SMTP_* | Yes (email) | Outbound mail. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Strongly recommended | Shared queue/reservations + rate limits. |
 
-Optional: `MOCK_NO_EMAIL=true` to disable sending emails (e.g. local testing). An `env.example` file is in the project root (copy to `.env.local` and fill in).
+Optional: `MOCK_NO_EMAIL=true`, `MAINTENANCE_MODE=true`. See `env.example`.
 
 ---
 
-## 12. Data retention (2 months)
+## 7. Data retention (2 months)
 
-- **Reservations:** Records with `date` older than 60 days are removed on next read (lazy cleanup in `_store.readAll`).
-- **Queue:** Entries with `addedAt` older than 60 days are removed on next read (`_queue.readQueue`).
-- **Alternatives:** Entries with `createdAt` older than 60 days are removed on next read (`_alternatives.readAlternatives`).
-- **Cancellations:** Records with `cancelledAt` older than 60 days are removed on next read (`_store.readCancellations`).
-
-Configured in `app/api/reservation/_retention.ts` (`RETENTION_DAYS = 60`). No hardcoded defaults remain for auth, base URL, or owner email; all are env-only and required when used (503 if missing).
+Lazy cleanup on read for reservations, queue, alternatives, cancellations (`RETENTION_DAYS = 60`).

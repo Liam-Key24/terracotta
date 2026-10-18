@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import { safeEqualString } from '../_crypto';
 
 const COOKIE_NAME = 'crm_session';
 const SECRET = process.env.CRM_SECRET ?? process.env.ADMIN_SECRET ?? '';
@@ -18,8 +19,9 @@ export function signCookie(role: Role): string | null {
 export function verifyCookie(value: string): { role: Role; exp: number } | null {
     if (!SECRET || !value || !value.includes('.')) return null;
     const [payloadB64, sig] = value.split('.');
+    if (!payloadB64 || !sig) return null;
     const expectedSig = createHmac('sha256', SECRET).update(payloadB64).digest('base64url');
-    if (sig !== expectedSig) return null;
+    if (!safeEqualString(sig, expectedSig)) return null;
     try {
         const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8'));
         if (payload.exp && payload.exp > Date.now() && (payload.role === 'admin' || payload.role === 'developer')) {

@@ -23,7 +23,7 @@ function redisCredentials(): { url: string; token: string } | null {
     return null;
 }
 
-function getRedis(): Redis | null {
+export function getUpstashRedis(): Redis | null {
     const cred = redisCredentials();
     if (!cred) return null;
 
@@ -33,6 +33,10 @@ function getRedis(): Redis | null {
         clientCredentialsKey = key;
     }
     return client;
+}
+
+function getRedis(): Redis | null {
+    return getUpstashRedis();
 }
 
 /** REST responses may return a string blob or an already-parsed object — normalize to a JSON string. */

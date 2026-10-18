@@ -151,7 +151,7 @@ const createTransporter = () => {
 
 export async function POST(request: NextRequest) {
     try {
-        const limit = checkRateLimit(request);
+        const limit = await checkRateLimit(request);
         if (!limit.ok) {
             return NextResponse.json(
                 { error: 'Too many requests. Please try again in a minute.' },
