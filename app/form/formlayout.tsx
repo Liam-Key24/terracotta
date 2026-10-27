@@ -12,6 +12,12 @@ const fieldClassName =
 // Native select arrows ignore padding; .form-select chevron uses the same --form-icon-inset as .form-date.
 const selectClassName = `${fieldClassName} form-select`
 
+// Border lives on the wrapper so native date intrinsic min-width cannot blow past sibling fields.
+const dateWrapperClassName =
+    'relative w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-[#9d2b52] focus-within:border-[#9d2b52]'
+const dateInputClassName =
+    'form-date block w-full min-w-0 max-w-full border-0 bg-transparent pl-4 pr-10 py-3 sm:py-2 text-base outline-none rounded-lg'
+
 // Shared form time options for inside/outside selects.
 const FORM_TIME_OPTIONS = [
     { value: '10:00', label: '10:00 AM' },
@@ -140,11 +146,11 @@ export default function Form(){
     };
 
     return (
-        <div className="w-full p-0 md:h-full md:max-w-none" id='form'>
+        <div className="w-full min-w-0 max-w-full p-0 md:h-full md:max-w-none" id='form'>
             <h2 className="text-2xl sm:text-3xl font-light text-center mb-5 sm:mb-8 text-[#631732]/70">Make a Reservation</h2>
             
-            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5 sm:space-y-6 bg-white rounded-xl sm:rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:items-center">
+            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5 sm:space-y-6 bg-white rounded-xl sm:rounded-lg shadow-lg p-4 sm:p-6 md:p-8 min-w-0 max-w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:items-center min-w-0">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                             Full Name *
@@ -216,28 +222,30 @@ export default function Form(){
                         </select>
                     </div>
 
-                    <div>
+                    <div className="min-w-0 w-full max-w-full">
                         <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2 w-full">
                             Date *
                         </label>
-                        <input
-                            type="date"
-                            id="date"
-                            name="date"
-                            required
-                            value={formData.date}
-                            onChange={handleChange}
-                            onClick={(e) => {
-                                try {
-                                    e.currentTarget.showPicker?.()
-                                } catch {
-                                    // Unsupported browsers keep native date behavior.
-                                }
-                            }}
-                            min={new Date().toISOString().split('T')[0]}
-                            autoComplete="off"
-                            className={`${fieldClassName} form-date`}
-                        />
+                        <div className={dateWrapperClassName}>
+                            <input
+                                type="date"
+                                id="date"
+                                name="date"
+                                required
+                                value={formData.date}
+                                onChange={handleChange}
+                                onClick={(e) => {
+                                    try {
+                                        e.currentTarget.showPicker?.()
+                                    } catch {
+                                        // Unsupported browsers keep native date behavior.
+                                    }
+                                }}
+                                min={new Date().toISOString().split('T')[0]}
+                                autoComplete="off"
+                                className={dateInputClassName}
+                            />
+                        </div>
                     </div>
 
                     <div className="md:col-span-2">
