@@ -140,11 +140,11 @@ export default function Form(){
     };
 
     return (
-        <div className="w-full p-0 md:h-full md:max-w-none" id='form'>
+        <div className="w-full min-w-0 p-0 md:h-full md:max-w-none" id='form'>
             <h2 className="text-2xl sm:text-3xl font-light text-center mb-5 sm:mb-8 text-[#631732]/70">Make a Reservation</h2>
             
-            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5 sm:space-y-6 bg-white rounded-xl sm:rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:items-center">
+            <form method="post" action="#" onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5 sm:space-y-6 bg-white rounded-xl sm:rounded-lg shadow-lg p-4 sm:p-6 md:p-8 min-w-0 overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:items-center min-w-0">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                             Full Name *
@@ -216,7 +216,7 @@ export default function Form(){
                         </select>
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                         <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2 w-full">
                             Date *
                         </label>
