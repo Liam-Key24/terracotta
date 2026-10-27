@@ -8,6 +8,7 @@ import { sendSlotFullEmail } from './sendConfirmationEmail';
 import { signConfirmationToken, signDeclineToken } from './_confirmToken';
 import { countForSlot } from './_store';
 import { formatRedisErrorForClient, isUpstashConfigured } from './_upstash';
+import { getLunchPromoValidationError } from '../../lib/lunchPromo';
 
 // HTML Email Template for Owner
 const reservationEmailTemplate = (formData: {
@@ -338,6 +339,11 @@ export async function POST(request: NextRequest) {
         }
         if (!/^\d+$/.test(guests) || Number(guests) < 1 || Number(guests) > 20) {
             return NextResponse.json({ error: 'Invalid guests' }, { status: 400 });
+        }
+
+        const promoValidationError = getLunchPromoValidationError(promoCodeRaw ?? '', date, time);
+        if (promoValidationError) {
+            return NextResponse.json({ error: promoValidationError }, { status: 400 });
         }
 
         const formData = {
