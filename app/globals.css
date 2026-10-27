@@ -46,13 +46,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Do not use appearance:none on date — it breaks the native picker in Chromium. */
+/*
+ * Native date inputs keep a large intrinsic min-width (especially WebKit).
+ * The visible chrome is on a normal block wrapper; this control fills and clips inside it.
+ */
 .form-date {
+  display: block;
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  field-sizing: fixed;
   color-scheme: light;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-size: var(--form-icon-size) var(--form-icon-size);
   background-position: right var(--form-icon-inset) center;
+}
+
+.form-date::-webkit-datetime-edit,
+.form-date::-webkit-datetime-edit-fields-wrapper,
+.form-date::-webkit-datetime-edit-text,
+.form-date::-webkit-datetime-edit-month-field,
+.form-date::-webkit-datetime-edit-day-field,
+.form-date::-webkit-datetime-edit-year-field {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
 }
 
 /* Transparent hit target over the full field so clicks open the picker; custom icon stays inset. */
